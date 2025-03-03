@@ -1,4 +1,4 @@
-namespace MyLibrary.Domain.Entity.User;
+namespace MyLibrary.Domain.User;
 
 public class User : Abstraction.Entity
 {

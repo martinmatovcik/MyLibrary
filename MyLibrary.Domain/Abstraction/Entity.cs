@@ -1,4 +1,4 @@
-namespace MyLibrary.Domain.Entity.Abstraction;
+namespace MyLibrary.Domain.Abstraction;
 
 public abstract class Entity
 {
