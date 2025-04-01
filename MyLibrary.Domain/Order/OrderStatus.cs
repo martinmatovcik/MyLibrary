@@ -3,15 +3,18 @@ namespace MyLibrary.Domain.Order;
 public enum OrderStatus
 {
     UNDEFINED = 0,
+    CREATED,
     PENDING,
-    CONFIRMED,
     PROCESSING,
-    SHIPPED,
-    DELIVERED,
+    PLACED,
+    CONFIRMED,
+    CANCELED,
+    AWAITING_PICKUP,
+    // ITEMS_BORROWED,
+    PICKED_UP,
+    // ITEMS_RETURNED,
     COMPLETED,
-    RETURNED,
-    REFUNDED,
+    // REFUNDED,
     FAILED,
     ON_HOLD,
-    AWAITING_PICKUP
 }

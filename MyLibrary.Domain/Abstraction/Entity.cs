@@ -22,4 +22,6 @@ public abstract class Entity
     private bool IsStatus(EntityStatus status) => EntityStatus == status;
 
     private void SetStatus(EntityStatus newStatus) => EntityStatus = newStatus;
+
+    public bool Equals(Entity? other) => other != null && Id == other.Id;
 }

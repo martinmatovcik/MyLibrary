@@ -14,7 +14,7 @@ public class RentalDetail(Instant created, LibraryUser renter, LocalDate rentedD
     public string? Note { get; init; } = note;
     public bool IsCurrent { get; private set; } = isCurrent;
     
-    internal static RentalDetail New(LibraryUser renter, LocalDate? plannedReturnDate = null, string? note = null, bool isCurrent = false) =>
+    static internal RentalDetail Create(LibraryUser renter, LocalDate? plannedReturnDate = null, string? note = null, bool isCurrent = false) =>
         new(NodaTimeHelpers.NowInstant(), renter, NodaTimeHelpers.Today(), plannedReturnDate, null, note, isCurrent);
 
     internal void Return() => RealReturnDateTime = NodaTimeHelpers.Now();

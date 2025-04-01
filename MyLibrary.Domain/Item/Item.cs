@@ -1,4 +1,5 @@
 using MyLibrary.Domain.Abstraction;
+using MyLibrary.Domain.User;
 using NodaTime;
 
 namespace MyLibrary.Domain.Item;
@@ -7,7 +8,7 @@ public abstract class Item : Entity
 {
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
-    public User.LibraryUser Owner { get; private set; } = new();
+    public LibraryUser Owner { get; private set; } = LibraryUser.CreateEmpty();
     public List<RentalDetail> History { get; private set; } = [];
     public ItemStatus ItemStatus { get; private set; }
     
@@ -29,7 +30,7 @@ public abstract class Item : Entity
     // public void SetDescription(string? newDescription) =>  Description = newDescription;
     // public void RemoveDescription() => SetDescription(null);
 
-    public void Rent(User.LibraryUser renter, LocalDate? plannedReturnDate = null, string? note = null)
+    public void Rent(LibraryUser renter, LocalDate? plannedReturnDate = null, string? note = null)
     {
         if (IsAvailable() && History.Exists(x => x.IsNotReturned()))
             throw new InvalidOperationException("Item cannot be rented because it has not been returned.");
@@ -38,11 +39,13 @@ public abstract class Item : Entity
             throw new InvalidOperationException("Item cannot be rented because it is not available.");
 
         SetNotAvailable();
-        History.Add(RentalDetail.New(renter, plannedReturnDate, note, true));
+        History.Add(RentalDetail.Create(renter, plannedReturnDate, note, true));
     }
 
-    public void Return(User.LibraryUser renter)
+    public void Return(LibraryUser renter)
     {
+        
+        
         // var rentalDetail = History.Where(x => x.Renter == renter && x.is);
         //
         // if (IsAvailable() && History.Exists(x => x.IsReturned()))
