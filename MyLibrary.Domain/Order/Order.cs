@@ -1,5 +1,6 @@
 using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Helpers;
+using MyLibrary.Domain.Item;
 using MyLibrary.Domain.User;
 using NodaTime;
 
@@ -12,21 +13,25 @@ public class Order : Entity
     public LibraryUser Renter { get; init; } = LibraryUser.CreateEmpty();
     public OrderStatus Status { get; private set; }
     public LocalDateTime? PickUpDateTime { get; private set; }
+    public LocalDate? PlannedReturnDate { get; private set; }
+    public string? Note { get; private set; }
 
     private Order()
     {
     }
 
-    private Order(List<Item.Item> items, LibraryUser? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime)
+    private Order(List<Item.Item> items, LibraryUser? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         Items = items;
         ItemsOwner = itemsOwner;
         Renter = renter;
         Status = status;
         PickUpDateTime = pickUpDateTime;
+        PlannedReturnDate = plannedReturnDate;
+        Note = note;
     }
 
-    public static Order CreateEmpty(LibraryUser renter) => new([], null, renter, OrderStatus.CREATED, null);
+    public static Order CreateEmpty(LibraryUser renter) => new([], null, renter, OrderStatus.CREATED, null, null, null);
 
     public void AddItem(Item.Item item)
     {
@@ -34,15 +39,11 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'add item' to order. Order must be 'created' or 'placed'.");
 
         if (IsEmpty())
-        {
-            Items.Add(item);
             SetOwner(item.Owner);
-            return;
-        }
-
-        if (!item.Owner.Equals(ItemsOwner))
+        else if (!item.Owner.Equals(ItemsOwner))
             throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
 
+        item.Reserve(Renter);
         Items.Add(item);
     }
 
@@ -51,7 +52,8 @@ public class Order : Entity
         if (!IsUpdatePossible())
             throw new InvalidOperationException("Can not 'remove item' from order. Order must be 'created' or 'placed'.");
 
-        Items.Remove(item);
+        item.CancelReservation();
+        Items.Remove(item); //TODO: mozne problemy s trackovanim EF Core
         if (IsEmpty()) SetOwner(null);
     }
 
@@ -66,7 +68,7 @@ public class Order : Entity
         ItemsOwner = newOwner;
     }
 
-    public void Place(LocalDateTime pickUpDateTime)
+    public void Place(LocalDateTime pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         if (Status is not (OrderStatus.CREATED or OrderStatus.PENDING))
             throw new InvalidOperationException("Can not 'place' order. Order must be 'created' or 'placed'.");
@@ -75,6 +77,8 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'place' order. Order must not be empty.");
 
         SetPickUpDateTime(pickUpDateTime);
+        SetPlannedReturnDateTime(plannedReturnDate);
+        Note = note;
         Place();
     }
 
@@ -82,7 +86,7 @@ public class Order : Entity
     {
         SetOrderStatus(OrderStatus.PLACED);
 
-        //TODO: Notify owner to confirm order "some-how"
+        //TODO (In application layer): Notify owner to confirm order "some-how"
     }
 
     public void Confirm()
@@ -95,7 +99,7 @@ public class Order : Entity
 
         SetOrderStatus(OrderStatus.CONFIRMED);
 
-        //TODO: Notify renter that order was confirmed "some-how"
+        //TODO (In application layer): Notify renter that order was confirmed "some-how"
     }
 
     public void AwaitPickup()
@@ -108,19 +112,7 @@ public class Order : Entity
 
         SetOrderStatus(OrderStatus.AWAITING_PICKUP);
 
-        //TODO: Notify renter and owner that order is awaiting pickup "some-how"
-    }
-
-    public void Cancel()
-    {
-        if (!IsEmpty())
-        {
-            //TODO: Notify owner that order was cancelled "some-how"
-        }
-
-        //Do not reset items in order to allow user to recreate it from history later.
-
-        SetOrderStatus(OrderStatus.CANCELED);
+        //TODO (In application layer): Notify renter and owner that order is awaiting pickup "some-how"
     }
 
     public void PickUp()
@@ -129,8 +121,9 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'pick up' order. Order must be 'awaiting pickup'.");
 
         SetOrderStatus(OrderStatus.PICKED_UP);
-
-        //TODO: Rental detail update
+        
+        foreach (var item in Items) 
+            item.Rent(Renter, PlannedReturnDate);
     }
 
     public void Complete()
@@ -139,12 +132,37 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'complete' order. Order must be 'picked up'.");
 
         SetOrderStatus(OrderStatus.COMPLETED);
-
-        //TODO: Rental detail update
-        //TODO: Return items
+        
+        foreach (var item in Items) 
+            item.Return();
     }
 
-    public void SetPickUpDateTime(LocalDateTime pickUpDateTime)
+    public void Cancel()
+    {
+        if (Status is OrderStatus.COMPLETED)
+            throw new InvalidOperationException("'Completed' order can not be 'canceled'.");
+        
+        if (!IsEmpty())
+        {
+            //TODO (In application layer): Notify owner that order was cancelled "some-how"
+        }
+
+        foreach (var item in Items.Where(x => x.Status == ItemStatus.RESERVED))
+            item.CancelReservation();
+
+        //Do not reset (delete) items in order to allow user to recreate it from history later.
+        SetOrderStatus(OrderStatus.CANCELED);
+    }
+
+    public void ReCreate()
+    {
+        if (Status is not OrderStatus.CANCELED)
+            throw new InvalidOperationException("Item can not be 're-created'. It is not in status 'canceled'");
+        
+        SetOrderStatus(OrderStatus.CREATED);
+    }
+
+    private void SetPickUpDateTime(LocalDateTime pickUpDateTime)
     {
         if (NodaTimeHelpers.Now() >= pickUpDateTime)
             throw new InvalidOperationException("Can not 'set pick up date time'. Pick up date time must be in the future.");
@@ -156,6 +174,23 @@ public class Order : Entity
         }
 
         PickUpDateTime = pickUpDateTime;
+    }
+
+    private void SetPlannedReturnDateTime(LocalDate? plannedReturnDate)
+    {
+        if (plannedReturnDate is null)
+        {
+            PlannedReturnDate = plannedReturnDate;
+            return;
+        }
+
+        if (NodaTimeHelpers.Today() >= plannedReturnDate)
+            throw new InvalidOperationException("Can not 'set planned return date time'. Planned return date time must be in the future.");
+
+        if (plannedReturnDate <= PickUpDateTime?.Date)
+            throw new InvalidOperationException("Can not set 'planned return date time'. Planned return date time must be later than pick up date.");
+
+        PlannedReturnDate = plannedReturnDate;
     }
 
     private void SetOrderStatus(OrderStatus orderStatus) => Status = orderStatus;

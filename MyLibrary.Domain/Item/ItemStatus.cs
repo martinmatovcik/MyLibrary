@@ -5,5 +5,5 @@ public enum ItemStatus
     UNDEFINED = 0,
     AVAILABLE,
     NOT_AVAILABLE,
-    // RESERVED
+    RESERVED
 }
