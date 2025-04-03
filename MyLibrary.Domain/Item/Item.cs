@@ -13,6 +13,20 @@ public abstract class Item : Entity
     public List<RentalDetail> History { get; private set; } = []; //todo: toto treba prehodnotit
     public ItemStatus Status { get; private set; }
 
+    private Item()
+    {
+    }
+    
+    protected Item(string name, string? description, LibraryUser owner, LibraryUser? renter, List<RentalDetail> history, ItemStatus status)
+    {
+        Name = name;
+        Description = description;
+        Owner = owner;
+        Renter = renter;
+        History = history;
+        Status = status;
+    }
+
     public void Reserve(LibraryUser renter)
     {
         //TODO Feature: Rezervacia na obmedzeny cas

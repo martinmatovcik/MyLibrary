@@ -39,8 +39,14 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'add item' to order. Order must be 'created' or 'placed'.");
 
         if (IsEmpty())
+        {
+            item.Reserve(Renter);
+            Items.Add(item);
             SetOwner(item.Owner);
-        else if (!item.Owner.Equals(ItemsOwner))
+            return;
+        }
+        
+        if (!item.Owner.Equals(ItemsOwner))
             throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
 
         item.Reserve(Renter);
