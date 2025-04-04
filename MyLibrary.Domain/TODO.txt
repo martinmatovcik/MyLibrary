@@ -1,4 +1,4 @@
 
 
 1. Spojit Order a Item (vratane rental details) --> DONE
-2. Unit testy na domenu (pokryt na 100% - pomoc od AI)
+2. Unit testy na domenu (pokryt na 100% - pomoc od AI) --> DONE
