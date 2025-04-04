@@ -2,6 +2,7 @@ using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.Helpers;
 using MyLibrary.Domain.Item;
+using MyLibrary.Domain.Item.Abstraction;
 using MyLibrary.Domain.User;
 using NodaTime;
 
@@ -9,7 +10,7 @@ namespace MyLibrary.Domain.Order;
 
 public class Order : Entity
 {
-    public List<Item.Item> Items { get; private set; } = [];
+    public List<Item.Abstraction.Item> Items { get; private set; } = [];
     private LibraryUser? ItemsOwner { get; set; }
     public LibraryUser Renter { get; init; } = LibraryUser.CreateEmpty();
     public OrderStatus Status { get; private set; }
@@ -21,7 +22,7 @@ public class Order : Entity
     {
     }
 
-    private Order(List<Item.Item> items, LibraryUser? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
+    private Order(List<Item.Abstraction.Item> items, LibraryUser? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         Items = items;
         ItemsOwner = itemsOwner;
@@ -34,7 +35,7 @@ public class Order : Entity
 
     public static Order CreateEmpty(LibraryUser renter) => new([], null, renter, OrderStatus.CREATED, null, null, null);
 
-    public void AddItem(Item.Item item)
+    public void AddItem(Item.Abstraction.Item item)
     {
         if (!IsUpdatePossible())
             throw new InvalidOperationException("Can not 'add item' to order. Order must be 'created' or 'placed'.");
@@ -54,7 +55,7 @@ public class Order : Entity
         Items.Add(item);
     }
 
-    public void RemoveItem(Item.Item item)
+    public void RemoveItem(Item.Abstraction.Item item)
     {
         if (!IsUpdatePossible())
             throw new InvalidOperationException("Can not 'remove item' from order. Order must be 'created' or 'placed'.");

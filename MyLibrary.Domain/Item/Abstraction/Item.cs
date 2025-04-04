@@ -1,9 +1,8 @@
-using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.User;
 using NodaTime;
 
-namespace MyLibrary.Domain.Item;
+namespace MyLibrary.Domain.Item.Abstraction;
 
 public abstract class Item : Entity
 {

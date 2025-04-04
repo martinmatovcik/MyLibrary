@@ -2,7 +2,7 @@ using MyLibrary.Domain.Helpers;
 using MyLibrary.Domain.User;
 using NodaTime;
 
-namespace MyLibrary.Domain.Item;
+namespace MyLibrary.Domain.Item.Abstraction;
 
 public class RentalDetail(Instant created, LibraryUser renter, LocalDate rentedDate, LocalDate? plannedReturnDate, LocalDateTime? realReturnDateTime, RentalDetailStatus status)
 {

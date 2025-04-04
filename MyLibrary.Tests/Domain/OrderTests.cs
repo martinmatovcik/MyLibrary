@@ -1,4 +1,5 @@
 using MyLibrary.Domain.Item;
+using MyLibrary.Domain.Item.Abstraction;
 using MyLibrary.Domain.Order;
 using MyLibrary.Domain.User;
 using NodaTime;

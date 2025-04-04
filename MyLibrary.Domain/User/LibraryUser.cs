@@ -5,14 +5,14 @@ namespace MyLibrary.Domain.User;
 public class LibraryUser : Entity
 {
     public UserDetails Details { get; private set; } = UserDetails.CreateEmpty();
-    public List<Item.Item> OwnedItems { get; private set; } = [];
+    public List<Item.Abstraction.Item> OwnedItems { get; private set; } = [];
     public List<Order.Order> Orders { get; private set; } = [];
 
     private LibraryUser()
     {
     }
 
-    public LibraryUser(UserDetails userDetails, List<Item.Item> ownedItems, List<Order.Order> orders)
+    public LibraryUser(UserDetails userDetails, List<Item.Abstraction.Item> ownedItems, List<Order.Order> orders)
     {
         Details = userDetails;
         OwnedItems = ownedItems;
