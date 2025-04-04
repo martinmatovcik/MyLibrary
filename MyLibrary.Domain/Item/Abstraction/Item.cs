@@ -13,7 +13,7 @@ public abstract class Item : Entity
     public List<RentalDetail> History { get; private set; } = []; //todo: toto treba prehodnotit
     public ItemStatus Status { get; private set; }
 
-    private Item()
+    protected Item()
     {
     }
     
