@@ -1,6 +1,8 @@
+using MyLibrary.Domain.Abstraction.Entity;
+
 namespace MyLibrary.Domain.User;
 
-public class LibraryUser : Abstraction.Entity
+public class LibraryUser : Entity
 {
     public UserDetails Details { get; private set; } = UserDetails.CreateEmpty();
     public List<Item.Item> OwnedItems { get; private set; } = [];
@@ -17,5 +19,6 @@ public class LibraryUser : Abstraction.Entity
         Orders = orders;
     }
 
-    public static LibraryUser CreateEmpty(UserDetails? userDetails = null) => new(userDetails ?? UserDetails.CreateEmpty(), [], []);
+    public static LibraryUser CreateEmpty() => new(UserDetails.CreateEmpty(), [], []);
+    public static LibraryUser Create(UserDetails userDetails) => new(userDetails, [], []);
 }

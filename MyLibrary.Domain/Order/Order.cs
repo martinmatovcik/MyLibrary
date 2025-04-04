@@ -1,4 +1,5 @@
 using MyLibrary.Domain.Abstraction;
+using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.Helpers;
 using MyLibrary.Domain.Item;
 using MyLibrary.Domain.User;

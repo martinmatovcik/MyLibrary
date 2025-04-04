@@ -1,4 +1,4 @@
-namespace MyLibrary.Domain.Abstraction;
+namespace MyLibrary.Domain.Abstraction.Entity;
 
 public enum EntityStatus
 {
