@@ -2,7 +2,7 @@ namespace MyLibrary.Domain.User;
 
 public class LibraryUser : Abstraction.Entity
 {
-    public UserDetails Details { get; private set; } = UserDetails.Empty;
+    public UserDetails Details { get; private set; } = UserDetails.CreateEmpty();
     public List<Item.Item> OwnedItems { get; private set; } = [];
     public List<Order.Order> Orders { get; private set; } = [];
 
@@ -17,5 +17,5 @@ public class LibraryUser : Abstraction.Entity
         Orders = orders;
     }
 
-    public static LibraryUser CreateEmpty(UserDetails? userDetails = null) => new(userDetails ?? UserDetails.Empty, [], []);
+    public static LibraryUser CreateEmpty(UserDetails? userDetails = null) => new(userDetails ?? UserDetails.CreateEmpty(), [], []);
 }
