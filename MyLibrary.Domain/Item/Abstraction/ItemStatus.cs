@@ -1,4 +1,4 @@
-namespace MyLibrary.Domain.Item;
+namespace MyLibrary.Domain.Item.Abstraction;
 
 public enum ItemStatus
 {

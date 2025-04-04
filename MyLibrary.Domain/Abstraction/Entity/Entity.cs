@@ -1,7 +1,7 @@
 using MyLibrary.Domain.Helpers;
 using NodaTime;
 
-namespace MyLibrary.Domain.Abstraction;
+namespace MyLibrary.Domain.Abstraction.Entity;
 
 public abstract class Entity
 {
