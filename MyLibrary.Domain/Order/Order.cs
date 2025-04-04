@@ -39,8 +39,14 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'add item' to order. Order must be 'created' or 'placed'.");
 
         if (IsEmpty())
+        {
+            item.Reserve(Renter);
+            Items.Add(item);
             SetOwner(item.Owner);
-        else if (!item.Owner.Equals(ItemsOwner))
+            return;
+        }
+        
+        if (!item.Owner.Equals(ItemsOwner))
             throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
 
         item.Reserve(Renter);
@@ -71,7 +77,7 @@ public class Order : Entity
     public void Place(LocalDateTime pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         if (Status is not (OrderStatus.CREATED or OrderStatus.PENDING))
-            throw new InvalidOperationException("Can not 'place' order. Order must be 'created' or 'placed'.");
+            throw new InvalidOperationException("Can not 'place' order. Order must be 'created' or 'pending'.");
 
         if (IsEmpty())
             throw new InvalidOperationException("Can not 'place' order. Order must not be empty.");

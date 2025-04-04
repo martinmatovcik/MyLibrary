@@ -15,5 +15,5 @@ public record UserDetails(
     public string Email { get; private set; } = Email;
     public string PhoneNumber { get; private set; } = PhoneNumber;
 
-    public static readonly UserDetails Empty = new(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+    public static UserDetails CreateEmpty() => new(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
 }

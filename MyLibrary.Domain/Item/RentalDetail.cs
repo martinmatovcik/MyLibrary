@@ -13,7 +13,7 @@ public class RentalDetail(Instant created, LibraryUser renter, LocalDate rentedD
     public LocalDateTime? RealReturnDateTime { get; private set; } = realReturnDateTime;
     public RentalDetailStatus Status { get; private set; } = status;
     
-    static internal RentalDetail CreateActive(LibraryUser renter, LocalDate? plannedReturnDate = null) =>
+    public static RentalDetail CreateActive(LibraryUser renter, LocalDate? plannedReturnDate = null) =>
         new(NodaTimeHelpers.NowInstant(), renter, NodaTimeHelpers.Today(), plannedReturnDate, null, RentalDetailStatus.ACTIVE);
 
     public void Return()
