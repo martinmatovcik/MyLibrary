@@ -221,4 +221,66 @@ public class ItemTests
         item.History.Count.ShouldBe(1);
         item.History[0].Status.ShouldBe(RentalDetailStatus.COMPLETED);
     }
+    
+    [Fact]
+    public void Return_ShouldSetRenterToNull()
+    {
+        // Arrange
+        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
+        var renter = LibraryUser.CreateEmpty();
+        item.Rent(renter, null);
+        
+        // Act
+        item.Return();
+        
+        // Assert
+        item.Renter.ShouldBeNull();
+    }
+    
+    [Fact]
+    public void Return_ShouldSetActualReturnDateInHistoryRecord()
+    {
+        // Arrange
+        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
+        var renter = LibraryUser.CreateEmpty();
+        var today = LocalDateTime.FromDateTime(DateTime.Today);
+        item.Rent(renter, today.PlusDays(7).Date);
+        
+        // Act
+        item.Return();
+        
+        // Assert
+        item.History[0].RealReturnDateTime.ShouldNotBeNull();
+        item.History[0].RealReturnDateTime!.Value.ShouldBeGreaterThanOrEqualTo(today);
+    }
+    
+    [Fact]
+    public void CancelReservation_ShouldSetRenterToNull()
+    {
+        // Arrange
+        var renter = LibraryUser.CreateEmpty();
+        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
+        item.Reserve(renter);
+        
+        // Act
+        item.CancelReservation();
+        
+        // Assert
+        item.Renter.ShouldBeNull();
+    }
+    
+    [Fact] 
+    public void Rent_WithPlannedReturnDate_ShouldSetDateCorrectly()
+    {
+        // Arrange
+        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
+        var renter = LibraryUser.CreateEmpty();
+        var returnDate = LocalDate.FromDateTime(DateTime.Now.AddDays(14));
+    
+        // Act
+        item.Rent(renter, returnDate);
+    
+        // Assert
+        item.History[0].PlannedReturnDate.ShouldBe(returnDate);
+    }
 }

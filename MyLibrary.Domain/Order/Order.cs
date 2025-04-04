@@ -77,7 +77,7 @@ public class Order : Entity
     public void Place(LocalDateTime pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         if (Status is not (OrderStatus.CREATED or OrderStatus.PENDING))
-            throw new InvalidOperationException("Can not 'place' order. Order must be 'created' or 'placed'.");
+            throw new InvalidOperationException("Can not 'place' order. Order must be 'created' or 'pending'.");
 
         if (IsEmpty())
             throw new InvalidOperationException("Can not 'place' order. Order must not be empty.");

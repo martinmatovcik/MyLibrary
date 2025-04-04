@@ -254,7 +254,6 @@ public class OrderTests
 
         var futurePickupTime = _currentDateTime.PlusDays(1);
         var pastReturnDate = new LocalDate(1900, 10, 1);
-        ;
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() => order.Place(futurePickupTime, pastReturnDate, null))
@@ -525,6 +524,72 @@ public class OrderTests
 
     #endregion
 
+    [Fact]
+    public void Place_WithEarlierPickupTime_ShouldRequireExplicitCancelAndRecreate()
+    {
+        // Arrange
+        var order = Order.CreateEmpty(_renter);
+        var item = CreateTestItem(_itemOwner);
+        order.AddItem(item);
+        
+        var initialPickupTime = _currentDateTime.PlusDays(3);
+        order.Place(initialPickupTime, _currentDate.PlusDays(10), "Initial note");
+        
+        // Cancel and recreate the order
+        order.Cancel();
+        order.ReCreate();
+        order.AddItem(item);
+        
+        var earlierPickupTime = _currentDateTime.PlusDays(2);
+        
+        // Act
+        order.Place(earlierPickupTime, _currentDate.PlusDays(10), "Updated note");
+        
+        // Assert
+        order.Status.ShouldBe(OrderStatus.PLACED);
+        order.PickUpDateTime.ShouldBe(earlierPickupTime);
+    }
+    
+    [Fact]
+    public void Place_WithNullReturnDate_ShouldSetNullReturnDate()
+    {
+        // Arrange
+        var order = Order.CreateEmpty(_renter);
+        var item = CreateTestItem(_itemOwner);
+        order.AddItem(item);
+        
+        var pickupTime = _currentDateTime.PlusDays(1);
+        
+        // Act
+        order.Place(pickupTime, null, "Test note");
+        
+        // Assert
+        order.Status.ShouldBe(OrderStatus.PLACED);
+        order.PickUpDateTime.ShouldBe(pickupTime);
+        order.PlannedReturnDate.ShouldBeNull();
+    }
+    
+    [Fact]
+    public void Place_WithPendingStatus_ShouldUpdateOrderCorrectly()
+    {
+        // Arrange
+        var order = Order.CreateEmpty(_renter);
+        var item = CreateTestItem(_itemOwner);
+        order.AddItem(item);
+        
+        // Set order to PENDING status using reflection
+        typeof(Order).GetProperty("Status")?.SetValue(order, OrderStatus.PENDING);
+        
+        var pickupTime = _currentDateTime.PlusDays(1);
+        
+        // Act
+        order.Place(pickupTime, _currentDate.PlusDays(7), "Test note");
+        
+        // Assert
+        order.Status.ShouldBe(OrderStatus.PLACED);
+        order.PickUpDateTime.ShouldBe(pickupTime);
+    }
+    
     #region Helper Methods
 
     // Since Item is abstract, we need to create a concrete implementation for testing
@@ -566,5 +631,4 @@ public class OrderTests
     }
 
     #endregion
-
 }
