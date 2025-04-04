@@ -8,11 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Features\Order\" />
-      <Folder Include="FUTURE_API\Item\Book\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\MyLibrary.Domain\MyLibrary.Domain.csproj" />
     </ItemGroup>
 
