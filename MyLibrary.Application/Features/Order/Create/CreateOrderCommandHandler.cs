@@ -10,6 +10,7 @@ public class CreateOrderCommandHandler(ISender sender, IOrderRepository orderRep
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
+        //TODO-feature: should be done using separate http-call / message bus event? Learn modular monoliths...
         var renter = await sender.Send(new GetUserByIdQuery(request.RenterId), cancellationToken);
         
         var order = Domain.Order.Order.CreateEmpty(renter);
