@@ -1,6 +1,6 @@
 using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.Helpers;
-using MyLibrary.Domain.Item.Abstraction;
+using MyLibrary.Domain.Order.DomainEvents;
 using MyLibrary.Domain.User;
 using NodaTime;
 
@@ -8,8 +8,8 @@ namespace MyLibrary.Domain.Order;
 
 public class Order : Entity
 {
-    public List<Item.Abstraction.Item> Items { get; private set; } = [];
-    private LibraryUser? ItemsOwner { get; set; }
+    public List<OrderItem> Items { get; private set; } = [];
+    private Guid? ItemsOwner { get; set; }
     public LibraryUser Renter { get; init; } = LibraryUser.CreateEmpty();
     public OrderStatus Status { get; private set; }
     public LocalDateTime? PickUpDateTime { get; private set; }
@@ -20,7 +20,7 @@ public class Order : Entity
     {
     }
 
-    private Order(List<Item.Abstraction.Item> items, LibraryUser? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
+    private Order(List<OrderItem> items, Guid? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         Items = items;
         ItemsOwner = itemsOwner;
@@ -33,42 +33,44 @@ public class Order : Entity
 
     public static Order CreateEmpty(LibraryUser renter) => new([], null, renter, OrderStatus.CREATED, null, null, null);
 
-    public void AddItem(Item.Abstraction.Item item)
+    public void AddItem(OrderItem item)
     {
         if (!IsUpdatePossible())
             throw new InvalidOperationException("Can not 'add item' to order. Order must be 'created' or 'placed'.");
 
-        if (IsEmpty())
+        if (IsOrderEmpty())
         {
-            item.Reserve(Renter);
             Items.Add(item);
             SetOwner(item.Owner);
+            
+            RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter.Id));
             return;
         }
         
         if (!item.Owner.Equals(ItemsOwner))
             throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
 
-        item.Reserve(Renter);
         Items.Add(item);
+        RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter.Id));
     }
 
-    public void RemoveItem(Item.Abstraction.Item item)
+    public void RemoveItem(OrderItem item)
     {
         if (!IsUpdatePossible())
             throw new InvalidOperationException("Can not 'remove item' from order. Order must be 'created' or 'placed'.");
 
-        item.CancelReservation();
         Items.Remove(item); //TODO: mozne problemy s trackovanim EF Core
-        if (IsEmpty()) SetOwner(null);
+        if (IsOrderEmpty()) SetOwner(null);
+        
+        RaiseDomainEvent(new ItemRemovedFromOrder(item.ItemId));
     }
 
-    private void SetOwner(LibraryUser? newOwner)
+    private void SetOwner(Guid? newOwner)
     {
-        if (newOwner is null && !IsEmpty())
+        if (newOwner is null && !IsOrderEmpty())
             throw new InvalidOperationException("Can not remove owner of items. Items in order are not empty.");
 
-        if (newOwner is not null && IsEmpty())
+        if (newOwner is not null && IsOrderEmpty())
             throw new InvalidOperationException("Can not set owner of items. Items in order are empty.");
 
         ItemsOwner = newOwner;
@@ -79,7 +81,7 @@ public class Order : Entity
         if (Status is not (OrderStatus.CREATED or OrderStatus.PENDING))
             throw new InvalidOperationException("Can not 'place' order. Order must be 'created' or 'pending'.");
 
-        if (IsEmpty())
+        if (IsOrderEmpty())
             throw new InvalidOperationException("Can not 'place' order. Order must not be empty.");
 
         SetPickUpDateTime(pickUpDateTime);
@@ -128,8 +130,7 @@ public class Order : Entity
 
         SetOrderStatus(OrderStatus.PICKED_UP);
         
-        foreach (var item in Items) 
-            item.Rent(Renter, PlannedReturnDate);
+        RaiseDomainEvent(new OrderPickedUp(Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void Complete()
@@ -139,8 +140,7 @@ public class Order : Entity
 
         SetOrderStatus(OrderStatus.COMPLETED);
         
-        foreach (var item in Items) 
-            item.Return();
+        RaiseDomainEvent(new OrderCompleted(Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void Cancel()
@@ -148,20 +148,21 @@ public class Order : Entity
         if (Status is OrderStatus.COMPLETED)
             throw new InvalidOperationException("'Completed' order can not be 'canceled'.");
         
-        if (!IsEmpty())
+        if (!IsOrderEmpty())
         {
             //TODO (In application layer): Notify owner that order was cancelled "some-how"
         }
-
-        foreach (var item in Items.Where(x => x.Status == ItemStatus.RESERVED))
-            item.CancelReservation();
-
+        
         //Do not reset (delete) items in order to allow user to recreate it from history later.
         SetOrderStatus(OrderStatus.CANCELED);
+        
+        RaiseDomainEvent(new OrderCanceled(Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void ReCreate()
     {
+        //TODO: Malo by fungovat inak... Vsetky itemy by sa mali znovu zarezervovat
+        
         if (Status is not OrderStatus.CANCELED)
             throw new InvalidOperationException("Item can not be 're-created'. It is not in status 'canceled'");
         
@@ -203,5 +204,5 @@ public class Order : Entity
 
     private bool IsUpdatePossible() => Status is OrderStatus.CREATED or OrderStatus.PENDING;
 
-    private bool IsEmpty() => Items.Count == 0;
+    private bool IsOrderEmpty() => Items.Count == 0;
 }
