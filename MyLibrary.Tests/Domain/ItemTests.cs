@@ -1,6 +1,4 @@
 using MyLibrary.Domain.Item.Abstraction;
-using MyLibrary.Domain.User;
-using MyLibrary.Tests.Data;
 using NodaTime;
 using Shouldly;
 
@@ -10,18 +8,17 @@ public class ItemTests
 {
     private class TestItem : Item
     {
-        private TestItem(string name, string? description, LibraryUser owner, LibraryUser? renter, List<RentalDetail> history, ItemStatus status)
+        private TestItem(string name, string? description, Guid owner, Guid? renter, List<RentalDetail> history, ItemStatus status)
             : base(name, description, owner, renter, history, status)
         {
         }
-        // Concrete implementation of the abstract Item class for testing
 
-        static internal TestItem CreateWithStatus(ItemStatus itemStatus) => new("test-item", "test-description", LibraryUser.CreateEmpty(), null, [], itemStatus);
+        static internal TestItem CreateWithStatus(ItemStatus itemStatus) => new("test-item", "test-description", Guid.NewGuid(), null, [], itemStatus);
 
         static internal TestItem CreateWithStatusAndRenter(ItemStatus itemStatus) =>
-            new("test-item", "test-description", LibraryUser.CreateEmpty(), LibraryUser.CreateEmpty(), [], itemStatus);
+            new("test-item", "test-description", Guid.NewGuid(), Guid.NewGuid(), [], itemStatus);
 
-        internal void CreateNotReturnedHistory(LibraryUser renter, LocalDate? plannedReturnDate) => History.Add(RentalDetail.CreateActive(renter, plannedReturnDate));
+        internal void CreateNotReturnedHistory(Guid renter, LocalDate? plannedReturnDate) => History.Add(RentalDetail.CreateActive(renter, plannedReturnDate));
     }
 
     [Fact]
@@ -29,8 +26,8 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = UserData.CreateTestRenter();
-
+        var renter = Guid.NewGuid();
+        
         // Act
         item.Reserve(renter);
 
@@ -44,7 +41,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
 
         item.Rent(renter, null);
         typeof(Item).GetProperty("Status")!.SetValue(item, ItemStatus.AVAILABLE);
@@ -61,7 +58,7 @@ public class ItemTests
         var item = TestItem.CreateWithStatus(ItemStatus.NOT_AVAILABLE);
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => item.Reserve(LibraryUser.CreateEmpty()))
+        Should.Throw<InvalidOperationException>(() => item.Reserve(Guid.NewGuid()))
             .Message.ShouldBe("Item cannot be 'reserved' because it is not available.");
     }
 
@@ -94,7 +91,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         
         item.CreateNotReturnedHistory(renter, null);
         
@@ -110,7 +107,7 @@ public class ItemTests
         var item = TestItem.CreateWithStatus(ItemStatus.NOT_AVAILABLE);
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => item.Rent(LibraryUser.CreateEmpty(), null))
+        Should.Throw<InvalidOperationException>(() => item.Rent(Guid.NewGuid(), null))
             .Message.ShouldBe("Item cannot be 'rented' because it is not available.");
     }
 
@@ -119,7 +116,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = UserData.CreateTestRenter();
+        var renter = Guid.NewGuid();
 
         // Act
         item.Rent(renter, null);
@@ -134,7 +131,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         item.Reserve(renter);
 
         // Act
@@ -150,10 +147,8 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var reserver = new LibraryUser(
-            new UserDetails("reserver", "password", "First", "Last", "email@example.com", "1234567890"),
-            [], []);
-        var renter = UserData.CreateTestRenter();
+        var reserver = Guid.NewGuid();
+        var renter = Guid.NewGuid();
 
         item.Reserve(reserver);
 
@@ -167,7 +162,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         var returnDate = LocalDate.FromDateTime(DateTime.Now.AddDays(7));
 
         // Act
@@ -185,7 +180,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatusAndRenter(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         item.Rent(renter, null);
 
         // Act
@@ -211,7 +206,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         item.Rent(renter, null);
 
         // Act
@@ -227,7 +222,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         item.Rent(renter, null);
         
         // Act
@@ -242,7 +237,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         var today = LocalDateTime.FromDateTime(DateTime.Today);
         item.Rent(renter, today.PlusDays(7).Date);
         
@@ -258,7 +253,7 @@ public class ItemTests
     public void CancelReservation_ShouldSetRenterToNull()
     {
         // Arrange
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
         item.Reserve(renter);
         
@@ -274,7 +269,7 @@ public class ItemTests
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = LibraryUser.CreateEmpty();
+        var renter = Guid.NewGuid();
         var returnDate = LocalDate.FromDateTime(DateTime.Now.AddDays(14));
     
         // Act

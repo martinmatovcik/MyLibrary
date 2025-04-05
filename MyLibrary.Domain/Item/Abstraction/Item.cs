@@ -1,5 +1,5 @@
 using MyLibrary.Domain.Abstraction.Entity;
-using MyLibrary.Domain.User;
+using MyLibrary.Domain.Item.Abstraction.DomainEvents;
 using NodaTime;
 
 namespace MyLibrary.Domain.Item.Abstraction;
@@ -8,8 +8,8 @@ public abstract class Item : Entity
 {
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
-    public LibraryUser Owner { get; private set; } = LibraryUser.CreateEmpty();
-    public LibraryUser? Renter { get; private set; }
+    public Guid Owner { get; private set; } = Guid.Empty;
+    public Guid? Renter { get; private set; }
     public List<RentalDetail> History { get; private set; } = []; //todo: toto treba prehodnotit
     public ItemStatus Status { get; private set; }
 
@@ -17,7 +17,7 @@ public abstract class Item : Entity
     {
     }
     
-    protected Item(string name, string? description, LibraryUser owner, LibraryUser? renter, List<RentalDetail> history, ItemStatus status)
+    protected Item(string name, string? description, Guid owner, Guid? renter, List<RentalDetail> history, ItemStatus status)
     {
         Name = name;
         Description = description;
@@ -26,8 +26,8 @@ public abstract class Item : Entity
         History = history;
         Status = status;
     }
-
-    public void Reserve(LibraryUser renter)
+    
+    public void Reserve(Guid renter)
     {
         //TODO Feature: Rezervacia na obmedzeny cas
         
@@ -39,6 +39,8 @@ public abstract class Item : Entity
 
         SetStatus(ItemStatus.RESERVED);
         SetRenter(renter);
+        
+        RaiseDomainEvent(new ItemReserved(Id, Name, Renter!.Value));
     }
 
     public void CancelReservation()
@@ -48,9 +50,11 @@ public abstract class Item : Entity
         
         SetStatus(ItemStatus.AVAILABLE);
         SetRenter(null);
+        
+        RaiseDomainEvent(new ItemReservationCanceled(Id, Name));
     }
 
-    public void Rent(LibraryUser renter, LocalDate? plannedReturnDate)
+    public void Rent(Guid renter, LocalDate? plannedReturnDate)
     {
         if ((IsStatus(ItemStatus.AVAILABLE) || IsStatus(ItemStatus.RESERVED)) && History.Exists(x => x.IsNotReturned()))
             throw new InvalidOperationException("Item cannot be 'rented' because it has not been returned.");
@@ -64,6 +68,8 @@ public abstract class Item : Entity
         SetStatus(ItemStatus.NOT_AVAILABLE);
         SetRenter(renter);
         History.Add(RentalDetail.CreateActive(renter, plannedReturnDate));
+        
+        RaiseDomainEvent(new ItemRented(Id, Name, Renter!.Value));
     }
 
     public void Return()
@@ -74,6 +80,8 @@ public abstract class Item : Entity
         SetStatus(ItemStatus.AVAILABLE);
         SetRenter(null);
         GetActiveHistoryItem().Return();
+        
+        RaiseDomainEvent(new ItemReturned(Id, Name));
     }
 
     private RentalDetail GetActiveHistoryItem() => History.Single(x => x.Status == RentalDetailStatus.ACTIVE);
@@ -82,7 +90,7 @@ public abstract class Item : Entity
 
     private void SetStatus(ItemStatus newStatus) => Status = newStatus;
 
-    private void SetRenter(LibraryUser? renter) => Renter = renter;
+    private void SetRenter(Guid? renter) => Renter = renter;
 
     // GiveAway() - Darovenie itemu inemu userovi
 }

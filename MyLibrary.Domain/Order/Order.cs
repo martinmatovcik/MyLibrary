@@ -1,7 +1,6 @@
 using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.Helpers;
 using MyLibrary.Domain.Order.DomainEvents;
-using MyLibrary.Domain.User;
 using NodaTime;
 
 namespace MyLibrary.Domain.Order;
@@ -10,7 +9,7 @@ public class Order : Entity
 {
     public List<OrderItem> Items { get; private set; } = [];
     private Guid? ItemsOwner { get; set; }
-    public LibraryUser Renter { get; init; } = LibraryUser.CreateEmpty();
+    public Guid Renter { get; init; } = Guid.Empty;
     public OrderStatus Status { get; private set; }
     public LocalDateTime? PickUpDateTime { get; private set; }
     public LocalDate? PlannedReturnDate { get; private set; }
@@ -20,7 +19,7 @@ public class Order : Entity
     {
     }
 
-    private Order(List<OrderItem> items, Guid? itemsOwner, LibraryUser renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
+    private Order(List<OrderItem> items, Guid? itemsOwner, Guid renter, OrderStatus status, LocalDateTime? pickUpDateTime, LocalDate? plannedReturnDate, string? note)
     {
         Items = items;
         ItemsOwner = itemsOwner;
@@ -31,7 +30,7 @@ public class Order : Entity
         Note = note;
     }
 
-    public static Order CreateEmpty(LibraryUser renter) => new([], null, renter, OrderStatus.CREATED, null, null, null);
+    public static Order CreateEmpty(Guid renter) => new([], null, renter, OrderStatus.CREATED, null, null, null);
 
     public void AddItem(OrderItem item)
     {
@@ -43,7 +42,7 @@ public class Order : Entity
             Items.Add(item);
             SetOwner(item.Owner);
             
-            RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter.Id));
+            RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter));
             return;
         }
         
@@ -51,7 +50,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
 
         Items.Add(item);
-        RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter.Id));
+        RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter));
     }
 
     public void RemoveItem(OrderItem item)

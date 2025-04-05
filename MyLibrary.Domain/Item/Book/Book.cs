@@ -1,5 +1,4 @@
 using MyLibrary.Domain.Item.Abstraction;
-using MyLibrary.Domain.User;
 
 namespace MyLibrary.Domain.Item.Book;
 
@@ -13,7 +12,7 @@ public class Book : Abstraction.Item
     {
     }
     
-    private Book(string author, int year, string? isbn, string name, string? description, LibraryUser owner, LibraryUser? renter, List<RentalDetail> history, ItemStatus status)
+    private Book(string author, int year, string? isbn, string name, string? description, Guid owner, Guid? renter, List<RentalDetail> history, ItemStatus status)
         : base(name, description, owner, renter, history, status)
     {
         Author = author;
@@ -21,6 +20,6 @@ public class Book : Abstraction.Item
         Isbn = isbn;
     }
     
-    public static Book Create(string name, string author, int year, string? isbn, string? description, LibraryUser owner) =>
+    public static Book Create(string name, string author, int year, string? isbn, string? description, Guid owner) =>
         new(author, year, isbn, name, description, owner, null, [], ItemStatus.AVAILABLE);
 }

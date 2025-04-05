@@ -19,9 +19,7 @@ public abstract class Entity
 
     protected void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 
-    private bool IsStatus(EntityStatus status) => EntityStatus == status;
+    protected bool IsStatus(EntityStatus status) => EntityStatus == status;
 
-    private void SetStatus(EntityStatus newStatus) => EntityStatus = newStatus;
-
-    public bool Equals(Entity? other) => other != null && Id == other.Id;
+    protected void SetStatus(EntityStatus newStatus) => EntityStatus = newStatus;
 }
