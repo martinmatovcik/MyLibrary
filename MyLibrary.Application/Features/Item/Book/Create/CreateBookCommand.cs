@@ -1,4 +1,3 @@
-using MediatR;
 using MyLibrary.Application.Features.Item.Abstraction.Create;
 using MyLibrary.Application.FUTURE_API.Item.Book.Create;
 

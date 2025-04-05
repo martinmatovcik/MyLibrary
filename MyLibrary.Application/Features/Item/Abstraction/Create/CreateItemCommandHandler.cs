@@ -21,7 +21,7 @@ public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(ISend
 {
     public async Task<TResponse> Handle(TCommand request, CancellationToken cancellationToken)
     {
-        //TODO-feature: should be done using separate http-call? Learn modular monoliths...
+        //TODO-feature: should be done using separate http-call / message bus event? Learn modular monoliths...
         var owner = await sender.Send(new GetUserByIdQuery(request.OwnerId), cancellationToken);
         var item = CreateItem(request, owner);
         
