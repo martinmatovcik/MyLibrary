@@ -12,7 +12,6 @@ namespace MyLibrary.Application.Features.Item.Abstraction.Create;
 /// <typeparam name="TItem">The specific domain item type to create, must derive from <see cref="Domain.Item.Abstraction.Item"/>.</typeparam>
 /// <typeparam name="TCommand">The command containing creation details, must implement <see cref="CreateItemCommand{TResponse}"/>.</typeparam>
 /// <typeparam name="TResponse">The response type returned after item creation, must implement <see cref="CreateItemResponse"/>.</typeparam>
-/// <param name="sender">Mediator to send nested queries like retrieving the owner.</param>
 /// <param name="itemRepository">Repository for persisting the created item.</param>
 /// <param name="unitOfWork">Unit of work to commit the transaction.</param>
 public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(IItemRepository<TItem> itemRepository, IUnitOfWork unitOfWork)
