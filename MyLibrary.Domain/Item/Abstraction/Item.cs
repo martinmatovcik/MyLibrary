@@ -26,7 +26,9 @@ public abstract class Item : Entity
         History = history;
         Status = status;
     }
-    
+
+    public void RaiseCreatedEvent() => RaiseDomainEvent(new ItemCreated(Id, Name, Owner));
+
     public void Reserve(Guid renter)
     {
         //TODO Feature: Rezervacia na obmedzeny cas

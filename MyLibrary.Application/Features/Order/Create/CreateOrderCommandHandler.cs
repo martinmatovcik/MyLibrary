@@ -5,7 +5,7 @@ using MyLibrary.Domain.Order.Repository;
 
 namespace MyLibrary.Application.Features.Order.Create;
 
-public class CreateOrderCommandHandler(ISender sender, IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
+public class CreateOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {

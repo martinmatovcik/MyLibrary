@@ -15,12 +15,13 @@ namespace MyLibrary.Application.Features.Item.Abstraction.Create;
 /// <param name="sender">Mediator to send nested queries like retrieving the owner.</param>
 /// <param name="itemRepository">Repository for persisting the created item.</param>
 /// <param name="unitOfWork">Unit of work to commit the transaction.</param>
-public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(ISender sender, IItemRepository<TItem> itemRepository, IUnitOfWork unitOfWork)
+public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(IItemRepository<TItem> itemRepository, IUnitOfWork unitOfWork)
     : IRequestHandler<TCommand, TResponse> where TItem : Domain.Item.Abstraction.Item where TCommand : CreateItemCommand<TResponse> where TResponse : CreateItemResponse
 {
     public async Task<TResponse> Handle(TCommand request, CancellationToken cancellationToken)
     {
         var item = CreateItem(request, request.OwnerId);
+        item.RaiseCreatedEvent();
         
         await itemRepository.AddAsync(item, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
