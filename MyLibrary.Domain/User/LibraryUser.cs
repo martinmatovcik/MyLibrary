@@ -2,17 +2,17 @@ using MyLibrary.Domain.Abstraction.Entity;
 
 namespace MyLibrary.Domain.User;
 
-public class LibraryUser : Entity
+public class LibraryUser : Entity //, ClaimsPrincipal????
 {
     public UserDetails Details { get; private set; } = UserDetails.CreateEmpty();
-    public List<Item.Abstraction.Item> OwnedItems { get; private set; } = [];
-    public List<Order.Order> Orders { get; private set; } = [];
+    public List<UserItem> OwnedItems { get; private set; } = [];
+    public List<UserOrder> Orders { get; private set; } = [];
 
     private LibraryUser()
     {
     }
 
-    public LibraryUser(UserDetails userDetails, List<Item.Abstraction.Item> ownedItems, List<Order.Order> orders)
+    private LibraryUser(UserDetails userDetails, List<UserItem> ownedItems, List<UserOrder> orders)
     {
         Details = userDetails;
         OwnedItems = ownedItems;

@@ -1,29 +1,28 @@
-using MyLibrary.Domain.Item.Abstraction;
+using System.Diagnostics.CodeAnalysis;
 using MyLibrary.Domain.Order;
-using MyLibrary.Domain.User;
 using NodaTime;
 using Shouldly;
 
 namespace MyLibrary.Tests.Domain;
 
+[SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
 public class OrderTests
 {
-    private readonly LibraryUser _renter;
-    private readonly LibraryUser _itemOwner;
+    private readonly Guid _renter;
+    private readonly Guid _itemOwner;
     private readonly LocalDateTime _currentDateTime;
     private readonly LocalDate _currentDate;
 
     public OrderTests()
     {
-        var renterDetails = new UserDetails("johnDoe", "password123", "John", "Doe", "john.doe@example.com", "555-1234");
-        _renter = new LibraryUser(renterDetails, [], []);
-
-        var ownerDetails = new UserDetails("janeSmith", "password456", "Jane", "Smith", "jane.smith@example.com", "555-5678");
-        _itemOwner = new LibraryUser(ownerDetails, [], []);
+        _renter = Guid.NewGuid();
+        _itemOwner = Guid.NewGuid();
 
         _currentDateTime = new LocalDateTime(2099, 10, 1, 12, 0);
         _currentDate = _currentDateTime.Date;
     }
+
+    private static void Setup() => new OrderTests();
 
     #region CreateEmpty Tests
 
@@ -31,7 +30,7 @@ public class OrderTests
     public void CreateEmpty_ShouldCreateEmptyOrderWithCreatedStatus()
     {
         //Arrange
-        new OrderTests();
+        Setup();
 
         // Act
         var order = Order.CreateEmpty(_renter);
@@ -52,9 +51,9 @@ public class OrderTests
     public void AddItem_WhenOrderIsCreated_ShouldAddItemAndSetOwner()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         // Act
         order.AddItem(item);
@@ -62,17 +61,16 @@ public class OrderTests
         // Assert
         order.Items.Count.ShouldBe(1);
         order.Items[0].ShouldBe(item);
-        item.Status.ShouldBe(ItemStatus.RESERVED);
     }
 
     [Fact]
     public void AddItem_WhenAddingMultipleItemsFromSameOwner_ShouldAddAllItems()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item1 = CreateTestItem(_itemOwner);
-        var item2 = CreateTestItem(_itemOwner);
+        var item1 = CreateTestOrderItem(_itemOwner);
+        var item2 = CreateTestOrderItem(_itemOwner);
 
         // Act
         order.AddItem(item1);
@@ -82,21 +80,17 @@ public class OrderTests
         order.Items.Count.ShouldBe(2);
         order.Items.ShouldContain(item1);
         order.Items.ShouldContain(item2);
-        item1.Status.ShouldBe(ItemStatus.RESERVED);
-        item2.Status.ShouldBe(ItemStatus.RESERVED);
     }
 
     [Fact]
     public void AddItem_WhenAddingItemFromDifferentOwner_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item1 = CreateTestItem(_itemOwner);
+        var item1 = CreateTestOrderItem(_itemOwner);
 
-        var differentOwnerDetails = new UserDetails("diffUser", "pass123", "Different", "Owner", "different@example.com", "555-9999");
-        var differentOwner = new LibraryUser(differentOwnerDetails, [], []);
-        var item2 = CreateTestItem(differentOwner);
+        var item2 = CreateTestOrderItem(Guid.NewGuid());
 
         order.AddItem(item1);
 
@@ -109,15 +103,15 @@ public class OrderTests
     public void AddItem_WhenOrderIsNotUpdateable_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         // Move order to non-updateable state (CONFIRMED)
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
 
-        var newItem = CreateTestItem(_itemOwner);
+        var newItem = CreateTestOrderItem(_itemOwner);
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() => order.AddItem(newItem))
@@ -132,9 +126,9 @@ public class OrderTests
     public void RemoveItem_WhenOrderContainsItem_ShouldRemoveItemAndCancelReservation()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         // Act
@@ -142,16 +136,15 @@ public class OrderTests
 
         // Assert
         order.Items.ShouldBeEmpty();
-        item.Status.ShouldBe(ItemStatus.AVAILABLE);
     }
 
     [Fact]
     public void RemoveItem_WhenRemovingLastItem_ShouldClearOwner()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         // Act
@@ -160,10 +153,7 @@ public class OrderTests
         // Assert
         order.Items.ShouldBeEmpty();
 
-        // Test indirectly by adding an item from a different owner
-        var differentOwnerDetails = new UserDetails("diffUser", "pass123", "Different", "Owner", "diff@example.com", "555-9999");
-        var differentOwner = new LibraryUser(differentOwnerDetails, [], []);
-        var differentItem = CreateTestItem(differentOwner);
+        var differentItem = CreateTestOrderItem(Guid.NewGuid());
 
         // Should be able to add item from different owner as owner was cleared
         order.AddItem(differentItem);
@@ -175,9 +165,9 @@ public class OrderTests
     public void RemoveItem_WhenOrderIsNotUpdateable_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         // Move order to non-updateable state (CONFIRMED)
         AddItemAndPlaceOrder(order, item);
@@ -196,9 +186,9 @@ public class OrderTests
     public void Place_WithValidParameters_ShouldUpdateOrderStatus()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         var futurePickupTime = _currentDateTime.PlusDays(1);
@@ -217,7 +207,7 @@ public class OrderTests
     public void Place_WithEmptyOrder_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
         var futurePickupTime = _currentDateTime.PlusDays(1);
 
@@ -230,13 +220,12 @@ public class OrderTests
     public void Place_WithPastPickupTime_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         var pastPickupTime = new LocalDateTime(1990, 10, 1, 12, 0);
-        ;
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() => order.Place(pastPickupTime, null, null))
@@ -247,9 +236,9 @@ public class OrderTests
     public void Place_WithPastReturnDate_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         var futurePickupTime = _currentDateTime.PlusDays(1);
@@ -264,9 +253,9 @@ public class OrderTests
     public void Place_WithReturnDateBeforePickupDate_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         var futurePickupTime = _currentDateTime.PlusDays(2);
@@ -281,9 +270,9 @@ public class OrderTests
     public void Place_WithNonCreatedStatus_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         // Move order to CONFIRMED state
         AddItemAndPlaceOrder(order, item);
@@ -304,9 +293,9 @@ public class OrderTests
     public void Confirm_WhenOrderIsPlaced_ShouldUpdateStatus()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
 
         // Act
@@ -320,9 +309,9 @@ public class OrderTests
     public void Confirm_WhenOrderIsNotPlaced_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
 
         // Act & Assert
@@ -338,9 +327,9 @@ public class OrderTests
     public void AwaitPickup_WhenOrderIsConfirmed_ShouldUpdateStatus()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
 
@@ -355,9 +344,9 @@ public class OrderTests
     public void AwaitPickup_WhenOrderIsNotConfirmed_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
 
         // Act & Assert
@@ -373,9 +362,9 @@ public class OrderTests
     public void PickUp_WhenOrderIsAwaitingPickup_ShouldUpdateStatusAndRentItems()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         var futureReturnDate = _currentDate.PlusDays(7);
 
         AddItemAndPlaceOrder(order, item, futureReturnDate);
@@ -387,16 +376,15 @@ public class OrderTests
 
         // Assert
         order.Status.ShouldBe(OrderStatus.PICKED_UP);
-        item.Status.ShouldBe(ItemStatus.NOT_AVAILABLE);
     }
 
     [Fact]
     public void PickUp_WhenOrderIsNotAwaitingPickup_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
 
@@ -413,9 +401,9 @@ public class OrderTests
     public void Complete_WhenOrderIsPickedUp_ShouldUpdateStatusAndReturnItems()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
@@ -427,16 +415,15 @@ public class OrderTests
 
         // Assert
         order.Status.ShouldBe(OrderStatus.COMPLETED);
-        item.Status.ShouldBe(ItemStatus.AVAILABLE);
     }
 
     [Fact]
     public void Complete_WhenOrderIsNotPickedUp_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
@@ -455,9 +442,9 @@ public class OrderTests
     public void Cancel_WhenOrderIsPlaced_ShouldCancelReservations()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
 
         // Act
@@ -465,16 +452,15 @@ public class OrderTests
 
         // Assert
         order.Status.ShouldBe(OrderStatus.CANCELED);
-        item.Status.ShouldBe(ItemStatus.AVAILABLE);
     }
 
     [Fact]
     public void Cancel_WhenOrderIsCompleted_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
 
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
@@ -495,9 +481,9 @@ public class OrderTests
     public void ReCreate_WhenOrderIsCanceled_ShouldResetToCreatedStatus()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
         order.Cancel();
 
@@ -512,9 +498,9 @@ public class OrderTests
     public void ReCreate_WhenOrderIsNotCanceled_ShouldThrowException()
     {
         // Arrange
-        new OrderTests();
+        Setup();
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         AddItemAndPlaceOrder(order, item);
 
         // Act & Assert
@@ -529,7 +515,7 @@ public class OrderTests
     {
         // Arrange
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
         
         var initialPickupTime = _currentDateTime.PlusDays(3);
@@ -555,7 +541,7 @@ public class OrderTests
     {
         // Arrange
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
         
         var pickupTime = _currentDateTime.PlusDays(1);
@@ -574,7 +560,7 @@ public class OrderTests
     {
         // Arrange
         var order = Order.CreateEmpty(_renter);
-        var item = CreateTestItem(_itemOwner);
+        var item = CreateTestOrderItem(_itemOwner);
         order.AddItem(item);
         
         // Set order to PENDING status using reflection
@@ -591,39 +577,10 @@ public class OrderTests
     }
     
     #region Helper Methods
+    
+    private static OrderItem CreateTestOrderItem(Guid owner) => new(Guid.NewGuid(), "Test Item", owner);
 
-    // Since Item is abstract, we need to create a concrete implementation for testing
-    private class TestItem : Item
-    {
-        public TestItem(string name, string? description, LibraryUser owner, LibraryUser? renter, List<RentalDetail> history, ItemStatus status)
-            : base(name, description, owner, renter, history, status)
-        {
-            // Use reflection or other means to set the protected/private properties
-            // Or modify your Item class to have a protected constructor that can be used by subclasses
-            SetPrivateProperties(name, description, owner);
-        }
-
-        private void SetPrivateProperties(string name, string description, LibraryUser owner)
-        {
-            // Using reflection to set private fields/properties if needed
-            // This is just an example - adjust based on your actual Item class structure
-            var nameProperty = typeof(Item).GetProperty("Name");
-            nameProperty?.SetValue(this, name);
-
-            var descriptionProperty = typeof(Item).GetProperty("Description");
-            descriptionProperty?.SetValue(this, description);
-
-            var ownerProperty = typeof(Item).GetProperty("Owner");
-            ownerProperty?.SetValue(this, owner);
-
-            var statusProperty = typeof(Item).GetProperty("Status");
-            statusProperty?.SetValue(this, ItemStatus.AVAILABLE);
-        }
-    }
-
-    private static Item CreateTestItem(LibraryUser owner) => new TestItem("Test Item", "Description for test item", owner, null, [], ItemStatus.AVAILABLE);
-
-    private void AddItemAndPlaceOrder(Order order, Item item, LocalDate? returnDate = null)
+    private void AddItemAndPlaceOrder(Order order, OrderItem item, LocalDate? returnDate = null)
     {
         order.AddItem(item);
         var futurePickupTime = _currentDateTime.PlusDays(1);

@@ -1,5 +1,4 @@
 using MediatR;
-using MyLibrary.Application.Features.User.GetById;
 using MyLibrary.Application.FUTURE_API.Item.Abstraction.Create;
 using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Item.Abstraction.Repository;
@@ -21,9 +20,7 @@ public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(ISend
 {
     public async Task<TResponse> Handle(TCommand request, CancellationToken cancellationToken)
     {
-        //TODO-feature: should be done using separate http-call / message bus event? Learn modular monoliths...
-        var owner = await sender.Send(new GetUserByIdQuery(request.OwnerId), cancellationToken);
-        var item = CreateItem(request, owner);
+        var item = CreateItem(request, request.OwnerId);
         
         await itemRepository.AddAsync(item, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -37,7 +34,7 @@ public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(ISend
     /// <param name="request">The command request containing item details.</param>
     /// <param name="owner">The library user who will own the item.</param>
     /// <returns>A new domain item entity.</returns>
-    protected abstract TItem CreateItem(TCommand request, Domain.User.LibraryUser owner);
+    protected abstract TItem CreateItem(TCommand request, Guid owner);
     
     /// <summary>
     /// Creates a response DTO from the domain item entity.

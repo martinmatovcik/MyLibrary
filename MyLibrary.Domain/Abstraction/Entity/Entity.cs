@@ -11,17 +11,15 @@ public abstract class Entity
     
     public Instant Created { get; init; } = NodaTimeHelpers.NowInstant();
     
-    public bool IsCreated() => IsStatus(EntityStatus.CREATED);
+    private readonly List<IDomainEvent> _domainEvents = [];
 
-    public void SetCreated() => SetStatus(EntityStatus.CREATED);
+    public IReadOnlyList<IDomainEvent> GetDomainEvents() => _domainEvents.ToList();
 
-    public bool IsDeleted() => IsStatus(EntityStatus.DELETED);
+    public void ClearDomainEvents() => _domainEvents.Clear();
 
-    public void SetDeleted() => SetStatus(EntityStatus.DELETED);
-    
-    private bool IsStatus(EntityStatus status) => EntityStatus == status;
+    protected void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 
-    private void SetStatus(EntityStatus newStatus) => EntityStatus = newStatus;
+    protected bool IsStatus(EntityStatus status) => EntityStatus == status;
 
-    public bool Equals(Entity? other) => other != null && Id == other.Id;
+    protected void SetStatus(EntityStatus newStatus) => EntityStatus = newStatus;
 }

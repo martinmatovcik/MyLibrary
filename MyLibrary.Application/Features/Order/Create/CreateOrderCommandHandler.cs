@@ -1,5 +1,4 @@
 using MediatR;
-using MyLibrary.Application.Features.User.GetById;
 using MyLibrary.Application.FUTURE_API.Order;
 using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Order.Repository;
@@ -10,14 +9,11 @@ public class CreateOrderCommandHandler(ISender sender, IOrderRepository orderRep
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        //TODO-feature: should be done using separate http-call / message bus event? Learn modular monoliths...
-        var renter = await sender.Send(new GetUserByIdQuery(request.RenterId), cancellationToken);
-        
-        var order = Domain.Order.Order.CreateEmpty(renter);
+        var order = Domain.Order.Order.CreateEmpty(request.RenterId);
         
         await orderRepository.AddAsync(order, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         
-        return new CreateOrderResponse(order.Id, order.Status, renter.Id);
+        return new CreateOrderResponse(order.Id, order.Status, order.Renter);
     }
 }
