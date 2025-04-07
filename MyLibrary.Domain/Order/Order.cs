@@ -54,6 +54,12 @@ public class Order : Entity
         RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter));
     }
 
+    public void RemoveItem(Guid itemId)
+    {
+        var orderItem = Items.FirstOrDefault(x => x.ItemId == itemId) ?? throw new InvalidOperationException("Item not found in order.");
+        RemoveItem(orderItem);
+    }
+
     public void RemoveItem(OrderItem item)
     {
         if (!IsUpdatePossible())
