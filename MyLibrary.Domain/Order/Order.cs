@@ -39,15 +39,16 @@ public class Order : Entity
 
         if (IsOrderEmpty())
         {
-            Items.Add(item);
             SetOwner(item.Owner);
-            
-            RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter));
-            return;
         }
-        
-        if (!item.Owner.Equals(ItemsOwner))
+        else if (Items.Contains(item))
+        {
+            throw new InvalidOperationException("Can not 'add item' to order. Item is already in order.");
+        }
+        else if (!item.Owner.Equals(ItemsOwner))
+        {
             throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
+        }
 
         Items.Add(item);
         RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter));
@@ -60,7 +61,7 @@ public class Order : Entity
 
         Items.Remove(item); //TODO: mozne problemy s trackovanim EF Core
         if (IsOrderEmpty()) SetOwner(null);
-        
+
         RaiseDomainEvent(new ItemRemovedFromOrder(item.ItemId));
     }
 
@@ -128,7 +129,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'pick up' order. Order must be 'awaiting pickup'.");
 
         SetOrderStatus(OrderStatus.PICKED_UP);
-        
+
         RaiseDomainEvent(new OrderPickedUp(Items.Select(x => x.ItemId).ToArray()));
     }
 
@@ -138,7 +139,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'complete' order. Order must be 'picked up'.");
 
         SetOrderStatus(OrderStatus.COMPLETED);
-        
+
         RaiseDomainEvent(new OrderCompleted(Items.Select(x => x.ItemId).ToArray()));
     }
 
@@ -146,25 +147,25 @@ public class Order : Entity
     {
         if (Status is OrderStatus.COMPLETED)
             throw new InvalidOperationException("'Completed' order can not be 'canceled'.");
-        
+
         if (!IsOrderEmpty())
         {
             //TODO (In application layer): Notify owner that order was cancelled "some-how"
         }
-        
+
         //Do not reset (delete) items in order to allow user to recreate it from history later.
         SetOrderStatus(OrderStatus.CANCELED);
-        
+
         RaiseDomainEvent(new OrderCanceled(Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void ReCreate()
     {
         //TODO: Malo by fungovat inak... Vsetky itemy by sa mali znovu zarezervovat
-        
+
         if (Status is not OrderStatus.CANCELED)
             throw new InvalidOperationException("Item can not be 're-created'. It is not in status 'canceled'");
-        
+
         SetOrderStatus(OrderStatus.CREATED);
     }
 
