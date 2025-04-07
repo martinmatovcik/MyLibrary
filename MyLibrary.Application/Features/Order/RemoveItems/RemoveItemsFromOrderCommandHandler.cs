@@ -1,4 +1,5 @@
 using MediatR;
+using MyLibrary.Application.Features.Order.Mapper;
 using MyLibrary.Application.FUTURE_API.Order;
 using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Order.Repository;
@@ -18,12 +19,6 @@ public class RemoveItemsFromOrderCommandHandler(IOrderRepository orderRepository
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new OrderDetailResponse(
-            order.Items.Select(x => new OrderItemDto(x.ItemId, x.Name, x.Owner)).ToList(),
-            order.Renter,
-            order.Status,
-            order.PickUpDateTime,
-            order.PlannedReturnDate,
-            order.Note);
+        return order.ToOrderDetailResponse();
     }
 }

@@ -3,4 +3,4 @@ using NodaTime;
 
 namespace MyLibrary.Application.FUTURE_API.Order;
 
-public record OrderDetailResponse(List<OrderItemDto> Items, Guid RenterId, OrderStatus Status, LocalDateTime? PickUpDateTime, LocalDate? PlannedReturnDate, string? Note);
+public record OrderDetailResponse(Guid OrderId, List<OrderItemDto> Items, Guid RenterId, OrderStatus Status, LocalDateTime? PickUpDateTime, LocalDate? PlannedReturnDate, string? Note);
