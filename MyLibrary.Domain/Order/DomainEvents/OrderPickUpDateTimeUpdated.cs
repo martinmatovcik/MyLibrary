@@ -3,4 +3,4 @@ using NodaTime;
 
 namespace MyLibrary.Domain.Order.DomainEvents;
 
-public record OrderPlaced(Guid OrderId, LocalDateTime pickUpDateTime) : OrderDomainEvent(OrderId);
+public record OrderPickUpDateTimeUpdated(Guid OrderId, LocalDateTime PickUpDateTime) : OrderDomainEvent(OrderId);

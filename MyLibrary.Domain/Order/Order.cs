@@ -94,14 +94,53 @@ public class Order : Entity
 
         SetPickUpDateTime(pickUpDateTime);
         SetPlannedReturnDateTime(plannedReturnDate);
+        
         Note = note;
+        
         Place();
     }
 
     private void Place()
     {
         SetOrderStatus(OrderStatus.PLACED);
-        RaiseDomainEvent(new OrderPlaced(Id));
+        RaiseDomainEvent(new OrderPlaced(Id, PickUpDateTime!.Value));  
+    }
+    
+    public void UpdatePickUpDateTime(LocalDateTime pickUpDateTime)
+    {
+        if (Status is not (OrderStatus.PLACED or OrderStatus.CONFIRMED))
+            throw new InvalidOperationException("Can not 'update pick up date time'. Order must be 'placed'.");
+        
+        SetPickUpDateTime(pickUpDateTime);
+
+        if (Status is OrderStatus.CONFIRMED) Place();
+        
+        RaiseDomainEvent(new OrderPickUpDateTimeUpdated(Id, PickUpDateTime!.Value));
+    }
+
+    private void SetPickUpDateTime(LocalDateTime pickUpDateTime)
+    {
+        if (NodaTimeHelpers.Now() >= pickUpDateTime)
+            throw new InvalidOperationException("Can not 'set pick up date time'. Pick up date time must be in the future.");
+
+        PickUpDateTime = pickUpDateTime;
+    }
+
+    private void SetPlannedReturnDateTime(LocalDate? plannedReturnDate)
+    {
+        if (plannedReturnDate is null)
+        {
+            PlannedReturnDate = plannedReturnDate;
+            return;
+        }
+
+        if (NodaTimeHelpers.Today() >= plannedReturnDate)
+            throw new InvalidOperationException("Can not 'set planned return date time'. Planned return date time must be in the future.");
+
+        if (plannedReturnDate <= PickUpDateTime?.Date)
+            throw new InvalidOperationException("Can not set 'planned return date time'. Planned return date time must be later than pick up date.");
+
+        PlannedReturnDate = plannedReturnDate;
     }
 
     public void Confirm()
@@ -176,37 +215,6 @@ public class Order : Entity
         {
             RaiseDomainEvent(new ItemAddedToOrder(Id, item.ItemId, Renter));
         }
-    }
-
-    private void SetPickUpDateTime(LocalDateTime pickUpDateTime)
-    {
-        if (NodaTimeHelpers.Now() >= pickUpDateTime)
-            throw new InvalidOperationException("Can not 'set pick up date time'. Pick up date time must be in the future.");
-
-        if (pickUpDateTime < PickUpDateTime)
-        {
-            Cancel();
-            Place();
-        }
-
-        PickUpDateTime = pickUpDateTime;
-    }
-
-    private void SetPlannedReturnDateTime(LocalDate? plannedReturnDate)
-    {
-        if (plannedReturnDate is null)
-        {
-            PlannedReturnDate = plannedReturnDate;
-            return;
-        }
-
-        if (NodaTimeHelpers.Today() >= plannedReturnDate)
-            throw new InvalidOperationException("Can not 'set planned return date time'. Planned return date time must be in the future.");
-
-        if (plannedReturnDate <= PickUpDateTime?.Date)
-            throw new InvalidOperationException("Can not set 'planned return date time'. Planned return date time must be later than pick up date.");
-
-        PlannedReturnDate = plannedReturnDate;
     }
 
     private void SetOrderStatus(OrderStatus orderStatus) => Status = orderStatus;
