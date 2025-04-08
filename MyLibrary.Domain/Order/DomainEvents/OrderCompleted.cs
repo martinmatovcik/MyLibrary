@@ -1,6 +1,6 @@
-using MyLibrary.Domain.Abstraction.Entity;
+using MyLibrary.Domain.Order.DomainEvents.Abstraction;
 
 namespace MyLibrary.Domain.Order.DomainEvents;
 
-public record OrderCompleted(Guid[] ItemIds) : IDomainEvent;
+public record OrderCompleted(Guid OrderId, Guid[] ItemIds) : OrderDomainEvent(OrderId);
 // Handler should "return()" each item
