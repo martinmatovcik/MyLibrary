@@ -4,7 +4,7 @@ using MyLibrary.Domain.User.Repository;
 
 namespace MyLibrary.Application.Features.User.GetById;
 
-public class GetUserByIdQueryHandler(IUserRepository userRepository) : IRequestHandler<GetUserByIdQuery, LibraryUser>
+sealed internal class GetUserByIdQueryHandler(IUserRepository userRepository) : IRequestHandler<GetUserByIdQuery, LibraryUser>
 {
     public async Task<LibraryUser> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {

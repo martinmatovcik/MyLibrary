@@ -4,4 +4,4 @@ using MyLibrary.Domain.Order;
 
 namespace MyLibrary.Application.Features.Order.AddItems;
 
-public record AddItemsToOrderCommand(Guid OrderId, List<OrderItem> OrderItems) : IRequest<OrderDetailResponse>;
+public sealed record AddItemsToOrderCommand(Guid OrderId, List<OrderItem> OrderItems) : IRequest<OrderDetailResponse>;

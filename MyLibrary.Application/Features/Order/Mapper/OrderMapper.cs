@@ -2,9 +2,9 @@ using MyLibrary.Application.FUTURE_API.Order;
 
 namespace MyLibrary.Application.Features.Order.Mapper;
 
-public static class OrderMapper
+static internal class OrderMapper
 {
-    public static OrderDetailResponse ToOrderDetailResponse(this Domain.Order.Order order)
+    static internal OrderDetailResponse ToOrderDetailResponse(this Domain.Order.Order order)
     {
         return new OrderDetailResponse(
             order.Id,

@@ -6,7 +6,7 @@ using MyLibrary.Domain.Order.Repository;
 
 namespace MyLibrary.Application.Features.Order.Place;
 
-public class PlaceOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderDetailResponse>
+sealed internal class PlaceOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderDetailResponse>
 {
     public async Task<OrderDetailResponse> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {

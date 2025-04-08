@@ -14,7 +14,7 @@ namespace MyLibrary.Application.Features.Item.Abstraction.Create;
 /// <typeparam name="TResponse">The response type returned after item creation, must implement <see cref="CreateItemResponse"/>.</typeparam>
 /// <param name="itemRepository">Repository for persisting the created item.</param>
 /// <param name="unitOfWork">Unit of work to commit the transaction.</param>
-public abstract class CreateItemCommandHandler<TItem, TCommand, TResponse>(IItemRepository<TItem> itemRepository, IUnitOfWork unitOfWork)
+abstract internal class CreateItemCommandHandler<TItem, TCommand, TResponse>(IItemRepository<TItem> itemRepository, IUnitOfWork unitOfWork)
     : IRequestHandler<TCommand, TResponse> where TItem : Domain.Item.Abstraction.Item where TCommand : CreateItemCommand<TResponse> where TResponse : CreateItemResponse
 {
     public async Task<TResponse> Handle(TCommand request, CancellationToken cancellationToken)

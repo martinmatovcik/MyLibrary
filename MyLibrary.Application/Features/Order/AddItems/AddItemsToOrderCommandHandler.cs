@@ -6,7 +6,7 @@ using MyLibrary.Domain.Order.Repository;
 
 namespace MyLibrary.Application.Features.Order.AddItems;
 
-public class AddItemsToOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<AddItemsToOrderCommand, OrderDetailResponse>
+sealed internal class AddItemsToOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<AddItemsToOrderCommand, OrderDetailResponse>
 {
     public async Task<OrderDetailResponse> Handle(AddItemsToOrderCommand request, CancellationToken cancellationToken)
     {

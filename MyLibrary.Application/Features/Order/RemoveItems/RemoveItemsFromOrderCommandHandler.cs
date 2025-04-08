@@ -6,7 +6,7 @@ using MyLibrary.Domain.Order.Repository;
 
 namespace MyLibrary.Application.Features.Order.RemoveItems;
 
-public class RemoveItemsFromOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<RemoveItemsFromOrderCommand, OrderDetailResponse>
+sealed internal class RemoveItemsFromOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IRequestHandler<RemoveItemsFromOrderCommand, OrderDetailResponse>
 {
     public async Task<OrderDetailResponse> Handle(RemoveItemsFromOrderCommand request, CancellationToken cancellationToken)
     {
