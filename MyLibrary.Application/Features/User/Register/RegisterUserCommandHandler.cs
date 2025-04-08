@@ -6,7 +6,7 @@ using MyLibrary.Domain.User.Repository;
 
 namespace MyLibrary.Application.Features.User.Register;
 
-public class RegisterUserCommandHandler(IUserRepository userRepository, IUnitOfWork unitOfWork) : IRequestHandler<RegisterUserCommand, RegisterUserResponse>
+sealed internal class RegisterUserCommandHandler(IUserRepository userRepository, IUnitOfWork unitOfWork) : IRequestHandler<RegisterUserCommand, RegisterUserResponse>
 {
     public async Task<RegisterUserResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
