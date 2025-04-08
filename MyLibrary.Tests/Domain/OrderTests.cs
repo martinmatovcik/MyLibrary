@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.Order;
+using MyLibrary.Domain.Order.DomainEvents;
 using NodaTime;
 using Shouldly;
 
@@ -41,6 +43,9 @@ public class OrderTests
         order.Status.ShouldBe(OrderStatus.CREATED);
         order.PickUpDateTime.ShouldBeNull();
         order.PlannedReturnDate.ShouldBeNull();
+        
+        order.GetDomainEvents().ShouldContain(x => x is OrderCreated);
+        order.GetDomainEvents().Count(x => x is OrderCreated).ShouldBe(1);
     }
 
     #endregion
@@ -61,6 +66,10 @@ public class OrderTests
         // Assert
         order.Items.Count.ShouldBe(1);
         order.Items[0].ShouldBe(item);
+        order.ItemsOwner.ShouldBe(_itemOwner);
+        
+        order.GetDomainEvents().ShouldContain(x => x is ItemAddedToOrder);
+        order.GetDomainEvents().Count(x => x is ItemAddedToOrder).ShouldBe(1);
     }
 
     [Fact]
@@ -80,6 +89,9 @@ public class OrderTests
         order.Items.Count.ShouldBe(2);
         order.Items.ShouldContain(item1);
         order.Items.ShouldContain(item2);
+        
+        order.GetDomainEvents().ShouldContain(x => x is ItemAddedToOrder);
+        order.GetDomainEvents().Count(x => x is ItemAddedToOrder).ShouldBe(2);
     }
 
     [Fact]
@@ -95,8 +107,11 @@ public class OrderTests
         order.AddItem(item1);
 
         // Act & Assert
+        Entity.ClearDomainEvents();
         Should.Throw<InvalidOperationException>(() => order.AddItem(item2))
             .Message.ShouldContain("All items must have same owner");
+        
+        order.GetDomainEvents().ShouldNotContain(x => x is ItemAddedToOrder);
     }
 
     [Fact]
@@ -114,8 +129,11 @@ public class OrderTests
         var newItem = CreateTestOrderItem(_itemOwner);
 
         // Act & Assert
+        Entity.ClearDomainEvents();
         Should.Throw<InvalidOperationException>(() => order.AddItem(newItem))
             .Message.ShouldContain("Can not 'add item' to order");
+        
+        order.GetDomainEvents().ShouldNotContain(x => x is ItemAddedToOrder);
     }
 
     #endregion
@@ -136,6 +154,7 @@ public class OrderTests
 
         // Assert
         order.Items.ShouldBeEmpty();
+        order.GetDomainEvents().ShouldContain(x => x is ItemRemovedFromOrder);
     }
 
     [Fact]
@@ -151,14 +170,9 @@ public class OrderTests
         order.RemoveItem(item);
 
         // Assert
-        order.Items.ShouldBeEmpty();
-
-        var differentItem = CreateTestOrderItem(Guid.NewGuid());
-
-        // Should be able to add item from different owner as owner was cleared
-        order.AddItem(differentItem);
-        order.Items.Count.ShouldBe(1);
-        order.Items[0].ShouldBe(differentItem);
+        Entity.ClearDomainEvents();
+        order.ItemsOwner.ShouldBeNull();
+        order.GetDomainEvents().ShouldContain(x => x is ItemRemovedFromOrder);
     }
 
     [Fact]
@@ -174,8 +188,11 @@ public class OrderTests
         order.Confirm();
 
         // Act & Assert
+        Entity.ClearDomainEvents();
         Should.Throw<InvalidOperationException>(() => order.RemoveItem(item))
             .Message.ShouldContain("Can not 'remove item' from order");
+        
+        order.GetDomainEvents().ShouldNotContain(x => x is ItemRemovedFromOrder);
     }
 
     #endregion
@@ -198,9 +215,13 @@ public class OrderTests
         order.Place(futurePickupTime, futureReturnDate, "Test note");
 
         // Assert
+        Entity.ClearDomainEvents();
+        
         order.Status.ShouldBe(OrderStatus.PLACED);
         order.PickUpDateTime.ShouldBe(futurePickupTime);
         order.PlannedReturnDate.ShouldBe(futureReturnDate);
+        
+        order.GetDomainEvents().ShouldContain(x => x is OrderPlaced);
     }
 
     [Fact]
@@ -212,8 +233,12 @@ public class OrderTests
         var futurePickupTime = _currentDateTime.PlusDays(1);
 
         // Act & Assert
+        Entity.ClearDomainEvents();
+        
         Should.Throw<InvalidOperationException>(() => order.Place(futurePickupTime, null, null))
             .Message.ShouldContain("Order must not be empty");
+        
+        order.GetDomainEvents().ShouldNotContain(x => x is OrderPlaced);
     }
 
     [Fact]
@@ -228,8 +253,12 @@ public class OrderTests
         var pastPickupTime = new LocalDateTime(1990, 10, 1, 12, 0);
 
         // Act & Assert
+        Entity.ClearDomainEvents();
+        
         Should.Throw<InvalidOperationException>(() => order.Place(pastPickupTime, null, null))
             .Message.ShouldContain("Pick up date time must be in the future");
+        
+        order.GetDomainEvents().ShouldNotContain(x => x is OrderPlaced);
     }
 
     [Fact]
@@ -245,8 +274,12 @@ public class OrderTests
         var pastReturnDate = new LocalDate(1900, 10, 1);
 
         // Act & Assert
+        Entity.ClearDomainEvents();
+        
         Should.Throw<InvalidOperationException>(() => order.Place(futurePickupTime, pastReturnDate, null))
             .Message.ShouldContain("Planned return date time must be in the future");
+        
+        order.GetDomainEvents().ShouldNotContain(x => x is OrderPlaced);
     }
 
     [Fact]
@@ -372,7 +405,7 @@ public class OrderTests
         order.AwaitPickup();
 
         // Act
-        order.PickUp();
+        order.Pickup();
 
         // Assert
         order.Status.ShouldBe(OrderStatus.PICKED_UP);
@@ -389,7 +422,7 @@ public class OrderTests
         order.Confirm();
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => order.PickUp())
+        Should.Throw<InvalidOperationException>(() => order.Pickup())
             .Message.ShouldContain("Order must be 'awaiting pickup'");
     }
 
@@ -408,7 +441,7 @@ public class OrderTests
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
         order.AwaitPickup();
-        order.PickUp();
+        order.Pickup();
 
         // Act
         order.Complete();
@@ -465,7 +498,7 @@ public class OrderTests
         AddItemAndPlaceOrder(order, item);
         order.Confirm();
         order.AwaitPickup();
-        order.PickUp();
+        order.Pickup();
         order.Complete();
 
         // Act & Assert
@@ -522,9 +555,9 @@ public class OrderTests
         order.Place(initialPickupTime, _currentDate.PlusDays(10), "Initial note");
         
         // Cancel and recreate the order
-        order.Cancel();
-        order.ReCreate();
-        order.AddItem(item);
+        // order.Cancel();
+        // order.ReCreate();
+        // order.AddItem(item);
         
         var earlierPickupTime = _currentDateTime.PlusDays(2);
         

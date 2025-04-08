@@ -11,13 +11,13 @@ public abstract class Entity
     
     public Instant Created { get; init; } = NodaTimeHelpers.NowInstant();
     
-    private readonly List<IDomainEvent> _domainEvents = [];
+    private static readonly List<IDomainEvent> DomainEvents = [];
 
-    public IReadOnlyList<IDomainEvent> GetDomainEvents() => _domainEvents.ToList();
+    public IReadOnlyList<IDomainEvent> GetDomainEvents() => DomainEvents.ToList();
 
-    public void ClearDomainEvents() => _domainEvents.Clear();
+    public static void ClearDomainEvents() => DomainEvents.Clear();
 
-    protected void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+    protected static void RaiseDomainEvent(IDomainEvent domainEvent) => DomainEvents.Add(domainEvent);
 
     protected bool IsStatus(EntityStatus status) => EntityStatus == status;
 

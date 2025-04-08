@@ -8,7 +8,7 @@ namespace MyLibrary.Domain.Order;
 public class Order : Entity
 {
     public List<OrderItem> Items { get; private set; } = [];
-    private Guid? ItemsOwner { get; set; }
+    public Guid? ItemsOwner { get; private set; }
     public Guid Renter { get; init; } = Guid.Empty;
     public OrderStatus Status { get; private set; }
     public LocalDateTime? PickUpDateTime { get; private set; }
@@ -30,7 +30,12 @@ public class Order : Entity
         Note = note;
     }
 
-    public static Order CreateEmpty(Guid renter) => new([], null, renter, OrderStatus.CREATED, null, null, null);
+    public static Order CreateEmpty(Guid renter)
+    {
+        var order = new Order([], null, renter, OrderStatus.CREATED, null, null, null);
+        RaiseDomainEvent(new OrderCreated(order.Id, renter));
+        return order;
+    }
 
     public void AddItem(OrderItem item)
     {
@@ -41,17 +46,17 @@ public class Order : Entity
         {
             SetOwner(item.Owner);
         }
-        else if (Items.Contains(item))
+        else
         {
-            throw new InvalidOperationException("Can not 'add item' to order. Item is already in order.");
-        }
-        else if (!item.Owner.Equals(ItemsOwner))
-        {
-            throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
+            if (Items.Contains(item))
+                throw new InvalidOperationException("Can not 'add item' to order. Item is already in order.");
+
+            if (!item.Owner.Equals(ItemsOwner))
+                throw new InvalidOperationException("Can not 'add item' to order. All items must have same owner.");
         }
 
         Items.Add(item);
-        RaiseDomainEvent(new ItemAddedToOrder(item.ItemId, Renter));
+        RaiseDomainEvent(new ItemAddedToOrder(Id, item.ItemId, Renter));
     }
 
     public void RemoveItem(Guid itemId)
@@ -68,16 +73,13 @@ public class Order : Entity
         Items.Remove(item); //TODO: mozne problemy s trackovanim EF Core
         if (IsOrderEmpty()) SetOwner(null);
 
-        RaiseDomainEvent(new ItemRemovedFromOrder(item.ItemId));
+        RaiseDomainEvent(new ItemRemovedFromOrder(Id, item.ItemId));
     }
 
     private void SetOwner(Guid? newOwner)
     {
         if (newOwner is null && !IsOrderEmpty())
             throw new InvalidOperationException("Can not remove owner of items. Items in order are not empty.");
-
-        if (newOwner is not null && IsOrderEmpty())
-            throw new InvalidOperationException("Can not set owner of items. Items in order are empty.");
 
         ItemsOwner = newOwner;
     }
@@ -99,8 +101,7 @@ public class Order : Entity
     private void Place()
     {
         SetOrderStatus(OrderStatus.PLACED);
-
-        //TODO (In application layer): Notify owner to confirm order "some-how"
+        RaiseDomainEvent(new OrderPlaced(Id));
     }
 
     public void Confirm()
@@ -112,6 +113,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'confirm' order. Pick up date time must not be null.");
 
         SetOrderStatus(OrderStatus.CONFIRMED);
+        RaiseDomainEvent(new OrderConfirmed(Id));
 
         //TODO (In application layer): Notify renter that order was confirmed "some-how"
     }
@@ -125,18 +127,17 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'await pickup' order. Pick up date time must not be null.");
 
         SetOrderStatus(OrderStatus.AWAITING_PICKUP);
-
+        RaiseDomainEvent(new OrderAwaitingPickup(Id));
         //TODO (In application layer): Notify renter and owner that order is awaiting pickup "some-how"
     }
 
-    public void PickUp()
+    public void Pickup()
     {
         if (Status is not OrderStatus.AWAITING_PICKUP)
             throw new InvalidOperationException("Can not 'pick up' order. Order must be 'awaiting pickup'.");
 
         SetOrderStatus(OrderStatus.PICKED_UP);
-
-        RaiseDomainEvent(new OrderPickedUp(Items.Select(x => x.ItemId).ToArray()));
+        RaiseDomainEvent(new OrderPickedUp(Id, Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void Complete()
@@ -145,8 +146,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'complete' order. Order must be 'picked up'.");
 
         SetOrderStatus(OrderStatus.COMPLETED);
-
-        RaiseDomainEvent(new OrderCompleted(Items.Select(x => x.ItemId).ToArray()));
+        RaiseDomainEvent(new OrderCompleted(Id, Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void Cancel()
@@ -154,25 +154,28 @@ public class Order : Entity
         if (Status is OrderStatus.COMPLETED)
             throw new InvalidOperationException("'Completed' order can not be 'canceled'.");
 
-        if (!IsOrderEmpty())
-        {
-            //TODO (In application layer): Notify owner that order was cancelled "some-how"
-        }
+        // if (!IsOrderEmpty())
+        // {
+        //     //TODO (In application layer): Notify owner that order was cancelled "some-how"
+        // }
 
         //Do not reset (delete) items in order to allow user to recreate it from history later.
         SetOrderStatus(OrderStatus.CANCELED);
-
-        RaiseDomainEvent(new OrderCanceled(Items.Select(x => x.ItemId).ToArray()));
+        RaiseDomainEvent(new OrderCanceled(Id, Items.Select(x => x.ItemId).ToArray()));
     }
 
     public void ReCreate()
     {
-        //TODO: Malo by fungovat inak... Vsetky itemy by sa mali znovu zarezervovat
-
         if (Status is not OrderStatus.CANCELED)
             throw new InvalidOperationException("Item can not be 're-created'. It is not in status 'canceled'");
 
         SetOrderStatus(OrderStatus.CREATED);
+        RaiseDomainEvent(new OrderCreated(Id, Renter));
+
+        foreach (var item in Items)
+        {
+            RaiseDomainEvent(new ItemAddedToOrder(Id, item.ItemId, Renter));
+        }
     }
 
     private void SetPickUpDateTime(LocalDateTime pickUpDateTime)
