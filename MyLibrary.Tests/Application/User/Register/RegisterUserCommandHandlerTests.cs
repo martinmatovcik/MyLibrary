@@ -9,16 +9,19 @@ namespace MyLibrary.Tests.Application.User.Register;
 
 public class RegisterUserCommandHandlerTests
 {
-    [Fact]
-    public async Task Handle_ValidRegisterUserCommand_ReturnsRegisterUserResponse()
-    {
-        // Arrange
-        var mockRepository = new Mock<IUserRepository>();
-        var mockUnitOfWork = new Mock<IUnitOfWork>();
-        var handler = new RegisterUserCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
+    private readonly Mock<IUserRepository> _mockRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly RegisterUserCommandHandler _handler;
 
-        var userId = Guid.NewGuid();
-        var command = new RegisterUserCommand(
+    public RegisterUserCommandHandlerTests()
+    {
+        _mockRepository = new Mock<IUserRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _handler = new RegisterUserCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object);
+    }
+
+    private static RegisterUserCommand NewCommand() =>
+        new(
             "test@example.com",
             "testuser",
             "Password123!",
@@ -26,116 +29,96 @@ public class RegisterUserCommandHandlerTests
             "User",
             "1234567890");
 
-        mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
+    [Fact]
+    public async Task Handle_ValidRegisterUserCommand_ReturnsRegisterUserResponse()
+    {
+        // Arrange
+        new RegisterUserCommandHandlerTests();
+        var command = NewCommand();
+
+        _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        mockRepository.Setup(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
         result.Email.ShouldBe(command.Email);
         result.Username.ShouldBe(command.Username);
 
-        mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
-        mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_EmailAlreadyInUse_ThrowsInvalidOperationException()
     {
         // Arrange
-        var mockRepository = new Mock<IUserRepository>();
-        var mockUnitOfWork = new Mock<IUnitOfWork>();
-        var handler = new RegisterUserCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
+        new RegisterUserCommandHandlerTests();
+        var command = NewCommand();
 
-        var command = new RegisterUserCommand(
-            "existing@example.com",
-            "testuser",
-            "Password123!",
-            "Test",
-            "User",
-            "1234567890");
-
-        mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await handler.Handle(command, CancellationToken.None));
+            async () => await _handler.Handle(command, CancellationToken.None));
 
         exception.Message.ShouldBe("Email is already in use.");
-        mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
-        mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Never);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task Handle_RepositoryThrowsException_PropagatesException()
     {
         // Arrange
-        var mockRepository = new Mock<IUserRepository>();
-        var mockUnitOfWork = new Mock<IUnitOfWork>();
-        var handler = new RegisterUserCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
-
-        var command = new RegisterUserCommand(
-            "test@example.com",
-            "testuser",
-            "Password123!",
-            "Test",
-            "User",
-            "1234567890");
+        new RegisterUserCommandHandlerTests();
+        var command = NewCommand();
 
         var expectedException = new InvalidOperationException("Test exception");
-        mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        mockRepository.Setup(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await handler.Handle(command, CancellationToken.None));
+            async () => await _handler.Handle(command, CancellationToken.None));
 
         exception.ShouldBe(expectedException);
-        mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
-        mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task Handle_UnitOfWorkThrowsException_PropagatesException()
     {
         // Arrange
-        var mockRepository = new Mock<IUserRepository>();
-        var mockUnitOfWork = new Mock<IUnitOfWork>();
-        var handler = new RegisterUserCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
+        new RegisterUserCommandHandlerTests();
+        var command = NewCommand();
 
-        var command = new RegisterUserCommand(
-            "test@example.com",
-            "testuser",
-            "Password123!",
-            "Test",
-            "User",
-            "1234567890");
-
-        mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var expectedException = new InvalidOperationException("UnitOfWork exception");
-        mockUnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+        _mockUnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await handler.Handle(command, CancellationToken.None));
+            async () => await _handler.Handle(command, CancellationToken.None));
 
         exception.ShouldBe(expectedException);
-        mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
-        mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.AddAsync(It.IsAny<LibraryUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
