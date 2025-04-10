@@ -9,15 +9,15 @@ namespace MyLibrary.Tests.Application.Order.RemoveItems;
 
 public class RemoveItemsFromOrderCommandHandlerTests
 {
-    private readonly Mock<IOrderRepository> mockRepository;
-    private readonly Mock<IUnitOfWork> mockUnitOfWork;
-    private readonly RemoveItemsFromOrderCommandHandler handler;
+    private readonly Mock<IOrderRepository> _mockRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly RemoveItemsFromOrderCommandHandler _handler;
 
     public RemoveItemsFromOrderCommandHandlerTests()
     {
-        mockRepository = new Mock<IOrderRepository>();
-        mockUnitOfWork = new Mock<IUnitOfWork>();
-        handler = new RemoveItemsFromOrderCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
+        _mockRepository = new Mock<IOrderRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _handler = new RemoveItemsFromOrderCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object);
     }
 
     private static void Setup() => new RemoveItemsFromOrderCommandHandlerTests();
@@ -37,11 +37,11 @@ public class RemoveItemsFromOrderCommandHandlerTests
         var itemIds = new List<Guid> { itemId };
         var command = new RemoveItemsFromOrderCommand(orderId, itemIds);
 
-        mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
         // Act
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -52,8 +52,8 @@ public class RemoveItemsFromOrderCommandHandlerTests
         result.PlannedReturnDate.ShouldBeNull();
         result.Note.ShouldBeNull();
 
-        mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -74,11 +74,11 @@ public class RemoveItemsFromOrderCommandHandlerTests
         var itemIds = new List<Guid> { itemId1 };
         var command = new RemoveItemsFromOrderCommand(orderId, itemIds);
 
-        mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
         // Act
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -92,8 +92,8 @@ public class RemoveItemsFromOrderCommandHandlerTests
         result.PlannedReturnDate.ShouldBeNull();
         result.Note.ShouldBeNull();
 
-        mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -106,15 +106,15 @@ public class RemoveItemsFromOrderCommandHandlerTests
         var itemIds = new List<Guid> { Guid.NewGuid() };
         var command = new RemoveItemsFromOrderCommand(orderId, itemIds);
 
-        mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((MyLibrary.Domain.Order.Order)null);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await handler.Handle(command, CancellationToken.None));
+            async () => await _handler.Handle(command, CancellationToken.None));
 
         exception.Message.ShouldBe($"Order with ID {orderId} not found.");
-        mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

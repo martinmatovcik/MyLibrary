@@ -10,15 +10,15 @@ namespace MyLibrary.Tests.Application.Order.Place;
 
 public class PlaceOrderCommandHandlerTests
 {
-    private readonly Mock<IOrderRepository> mockRepository;
-    private readonly Mock<IUnitOfWork> mockUnitOfWork;
-    private readonly PlaceOrderCommandHandler handler;
+    private readonly Mock<IOrderRepository> _mockRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly PlaceOrderCommandHandler _handler;
     
     public PlaceOrderCommandHandlerTests()
     {
-        mockRepository = new Mock<IOrderRepository>();
-        mockUnitOfWork = new Mock<IUnitOfWork>();
-        handler = new PlaceOrderCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
+        _mockRepository = new Mock<IOrderRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _handler = new PlaceOrderCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object);
     }
     
     private static void Setup() => new PlaceOrderCommandHandlerTests();
@@ -40,11 +40,11 @@ public class PlaceOrderCommandHandlerTests
         var plannedReturnDate = NodaTimeHelpers.Today().PlusDays(7);
         var command = new PlaceOrderCommand(orderId, pickUpDateTime, plannedReturnDate, "Test order note");
 
-        mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
         // Act
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -56,8 +56,8 @@ public class PlaceOrderCommandHandlerTests
         result.PlannedReturnDate.ShouldBe(plannedReturnDate);
         result.Note.ShouldNotBeEmpty();
         
-        mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -74,15 +74,15 @@ public class PlaceOrderCommandHandlerTests
         var pickUpDateTime = NodaTimeHelpers.Now().PlusDays(1);
         var command = new PlaceOrderCommand(orderId, pickUpDateTime, null, null);
 
-        mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((MyLibrary.Domain.Order.Order)null);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await handler.Handle(command, CancellationToken.None));
+            async () => await _handler.Handle(command, CancellationToken.None));
 
         exception.Message.ShouldBe($"Order with ID {orderId} not found.");
-        mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
