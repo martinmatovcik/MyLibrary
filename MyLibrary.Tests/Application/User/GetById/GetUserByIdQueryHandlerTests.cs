@@ -49,8 +49,8 @@ public class GetUserByIdQueryHandlerTests
         Setup();
         var userId = Guid.NewGuid();
         
-        _mockRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((LibraryUser)null);
+        _mockRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))!
+            .ReturnsAsync((LibraryUser?)null);
         
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(

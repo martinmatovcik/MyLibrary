@@ -106,8 +106,8 @@ public class RemoveItemsFromOrderCommandHandlerTests
         var itemIds = new List<Guid> { Guid.NewGuid() };
         var command = new RemoveItemsFromOrderCommand(orderId, itemIds);
 
-        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MyLibrary.Domain.Order.Order)null);
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))!
+            .ReturnsAsync((MyLibrary.Domain.Order.Order?)null);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(

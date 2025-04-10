@@ -74,8 +74,8 @@ public class PlaceOrderCommandHandlerTests
         var pickUpDateTime = NodaTimeHelpers.Now().PlusDays(1);
         var command = new PlaceOrderCommand(orderId, pickUpDateTime, null, null);
 
-        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MyLibrary.Domain.Order.Order)null);
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))!
+            .ReturnsAsync((MyLibrary.Domain.Order.Order?)null);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(

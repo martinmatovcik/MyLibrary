@@ -68,8 +68,8 @@ public class AddItemsToOrderCommandHandlerTests
         var orderItems = new List<OrderItem> { new(Guid.NewGuid(), "item", ownerId) };
         var command = new AddItemsToOrderCommand(orderId, orderItems);
         
-        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MyLibrary.Domain.Order.Order)null);
+        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))!
+            .ReturnsAsync((MyLibrary.Domain.Order.Order?)null);
             
         // Act & Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(
