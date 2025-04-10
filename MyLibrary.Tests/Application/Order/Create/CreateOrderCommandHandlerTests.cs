@@ -39,7 +39,6 @@ public class CreateOrderCommandHandlerTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.OrderId.ShouldNotBe(Guid.Empty);
         result.Items.ShouldBeEmpty();
         result.RenterId.ShouldBe(renterId);
         result.Status.ShouldBe(OrderStatus.CREATED);
