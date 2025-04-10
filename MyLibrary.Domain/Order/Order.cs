@@ -156,6 +156,8 @@ public class Order : Entity
 
         //TODO (In application layer): Notify renter that order was confirmed "some-how"
     }
+    
+    //TODO: DECLINE ORDER
 
     public void AwaitPickup()
     {
