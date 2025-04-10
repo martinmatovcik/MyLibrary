@@ -15,4 +15,8 @@
       <PackageReference Include="MediatR" Version="12.5.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="MyLibrary.Tests"/>
+    </ItemGroup>
+
 </Project>
