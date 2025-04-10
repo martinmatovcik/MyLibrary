@@ -17,11 +17,13 @@ public class GetUserByIdQueryHandlerTests
         _handler = new GetUserByIdQueryHandler(_mockRepository.Object);
     }
     
+    private static void Setup() => new GetUserByIdQueryHandlerTests();
+
     [Fact]
     public async Task Handle_UserExists_ReturnsUser()
     {
         // Arrange
-        new GetUserByIdQueryHandlerTests();
+        Setup();
         var userId = Guid.NewGuid();
         var expectedUser = LibraryUser.CreateEmpty();
         
@@ -44,7 +46,7 @@ public class GetUserByIdQueryHandlerTests
     public async Task Handle_UserDoesNotExist_ThrowsInvalidOperationException()
     {
         // Arrange
-        new GetUserByIdQueryHandlerTests();
+        Setup();
         var userId = Guid.NewGuid();
         
         _mockRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -62,7 +64,7 @@ public class GetUserByIdQueryHandlerTests
     public async Task Handle_RepositoryThrowsException_PropagatesException()
     {
         // Arrange
-        new GetUserByIdQueryHandlerTests();
+        Setup();
         var userId = Guid.NewGuid();
         var expectedException = new Exception("Database connection error");
         

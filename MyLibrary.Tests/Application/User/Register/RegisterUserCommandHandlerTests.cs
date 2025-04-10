@@ -19,6 +19,8 @@ public class RegisterUserCommandHandlerTests
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _handler = new RegisterUserCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object);
     }
+    
+    private static void Setup() => new RegisterUserCommandHandlerTests();
 
     private static RegisterUserCommand NewCommand() =>
         new(
@@ -33,7 +35,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ValidRegisterUserCommand_ReturnsRegisterUserResponse()
     {
         // Arrange
-        new RegisterUserCommandHandlerTests();
+        Setup();
         var command = NewCommand();
 
         _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
@@ -58,7 +60,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_EmailAlreadyInUse_ThrowsInvalidOperationException()
     {
         // Arrange
-        new RegisterUserCommandHandlerTests();
+        Setup();
         var command = NewCommand();
 
         _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
@@ -78,7 +80,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_RepositoryThrowsException_PropagatesException()
     {
         // Arrange
-        new RegisterUserCommandHandlerTests();
+        Setup();
         var command = NewCommand();
 
         var expectedException = new InvalidOperationException("Test exception");
@@ -102,7 +104,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_UnitOfWorkThrowsException_PropagatesException()
     {
         // Arrange
-        new RegisterUserCommandHandlerTests();
+        Setup();
         var command = NewCommand();
 
         _mockRepository.Setup(r => r.IsEmailAvailableAsync(command.Email, It.IsAny<CancellationToken>()))
