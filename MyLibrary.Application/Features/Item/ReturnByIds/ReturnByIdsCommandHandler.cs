@@ -2,11 +2,11 @@ using MediatR;
 using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Item.Abstraction.Repository;
 
-namespace MyLibrary.Application.Features.Item.RentByIds;
+namespace MyLibrary.Application.Features.Item.ReturnByIds;
 
-sealed internal class RentByIdsCommandHandler(IItemRepository itemRepository, IUnitOfWork unitOfWork) : IRequestHandler<RentByIdsCommand>
+sealed internal class ReturnByIdsCommandHandler(IItemRepository itemRepository, IUnitOfWork unitOfWork) : IRequestHandler<ReturnByIdsCommand>
 {
-    public async Task Handle(RentByIdsCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ReturnByIdsCommand request, CancellationToken cancellationToken)
     {
         var items = await itemRepository.GetByIdsAsync(request.ItemIds, cancellationToken);
 
@@ -18,9 +18,9 @@ sealed internal class RentByIdsCommandHandler(IItemRepository itemRepository, IU
             var notFoundIds = request.ItemIds.Except(items.Select(x => x.Id)).ToArray();
             throw new InvalidOperationException($"Items with ids {notFoundIds} were not found.");
         }
-
+        
         foreach (var item in items) 
-            item.Rent(request.RenterId, request.PlannedReturnDate);
+            item.Return();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
