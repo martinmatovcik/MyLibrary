@@ -40,7 +40,7 @@ public class PlaceOrderCommandHandlerTests
         var plannedReturnDate = NodaTimeHelpers.Today().PlusDays(7);
         var command = new PlaceOrderCommand(orderId, pickUpDateTime, plannedReturnDate, "Test order note");
 
-        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.FirstOrDefaultByIdAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
         // Act
@@ -56,7 +56,7 @@ public class PlaceOrderCommandHandlerTests
         result.PlannedReturnDate.ShouldBe(plannedReturnDate);
         result.Note.ShouldNotBeEmpty();
         
-        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.FirstOrDefaultByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -74,7 +74,7 @@ public class PlaceOrderCommandHandlerTests
         var pickUpDateTime = NodaTimeHelpers.Now().PlusDays(1);
         var command = new PlaceOrderCommand(orderId, pickUpDateTime, null, null);
 
-        _mockRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))!
+        _mockRepository.Setup(r => r.FirstOrDefaultByIdAsync(orderId, It.IsAny<CancellationToken>()))!
             .ReturnsAsync((MyLibrary.Domain.Order.Order?)null);
 
         // Act & Assert
@@ -82,7 +82,7 @@ public class PlaceOrderCommandHandlerTests
             async () => await _handler.Handle(command, CancellationToken.None));
 
         exception.Message.ShouldBe($"Order with ID {orderId} not found.");
-        _mockRepository.Verify(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.FirstOrDefaultByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
