@@ -8,7 +8,7 @@ sealed internal class ReserveItemByIdCommandHandler(IItemRepository itemReposito
 {
     public async Task Handle(ReserveItemByIdCommand request, CancellationToken cancellationToken)
     {
-        var item = await itemRepository.GetFirstByIdAsync(request.ItemId, cancellationToken);
+        var item = await itemRepository.FirstOrDefaultByIdAsync(request.ItemId, cancellationToken);
 
         if (item is null)
             throw new InvalidOperationException($"Item with id {request.ItemId} not found.");

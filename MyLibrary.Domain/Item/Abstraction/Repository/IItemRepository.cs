@@ -3,9 +3,8 @@ using MyLibrary.Domain.Abstraction.Entity.Repository;
 namespace MyLibrary.Domain.Item.Abstraction.Repository;
 
 //TODO: Move to application
-public interface IItemRepository
+public interface IItemRepository : IEntityRepository<Item>
 {
-    Task<Item?> GetFirstByIdAsync(Guid id, CancellationToken cancellationToken);
 }
 
 public interface IItemRepository<TItem> : IEntityRepository<TItem> where TItem : Item
