@@ -8,6 +8,6 @@ sealed internal class ItemAddedToOrderConsumer(ISender sender) : INotificationHa
 {
     public async Task Handle(ItemAddedToOrder notification, CancellationToken cancellationToken)
     {
-        await sender.Send(new ReserveItemByIdCommand(notification.ItemId, notification.RenterId), cancellationToken);
+        await sender.Send(new ReserveByIdCommand(notification.ItemId, notification.RenterId), cancellationToken);
     }
 }

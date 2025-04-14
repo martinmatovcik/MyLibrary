@@ -4,9 +4,9 @@ using MyLibrary.Domain.Item.Abstraction.Repository;
 
 namespace MyLibrary.Application.Features.Item.ReserveById;
 
-sealed internal class ReserveItemByIdCommandHandler(IItemRepository itemRepository, IUnitOfWork unitOfWork) : IRequestHandler<ReserveItemByIdCommand>
+sealed internal class ReserveByIdCommandHandler(IItemRepository itemRepository, IUnitOfWork unitOfWork) : IRequestHandler<ReserveByIdCommand>
 {
-    public async Task Handle(ReserveItemByIdCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ReserveByIdCommand request, CancellationToken cancellationToken)
     {
         var item = await itemRepository.FirstOrDefaultByIdAsync(request.ItemId, cancellationToken);
 
