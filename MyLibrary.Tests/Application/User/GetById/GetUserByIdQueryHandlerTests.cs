@@ -1,7 +1,7 @@
 using Moq;
-using MyLibrary.Application.Features.User.GetById;
+using MyLibrary.Application.User.GetById;
+using MyLibrary.Application.User.Repository;
 using MyLibrary.Domain.User;
-using MyLibrary.Domain.User.Repository;
 using Shouldly;
 
 namespace MyLibrary.Tests.Application.User.GetById;
