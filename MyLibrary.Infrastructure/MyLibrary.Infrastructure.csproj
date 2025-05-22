@@ -14,10 +14,21 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.4" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\MyLibrary.Application\MyLibrary.Application.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Database\Migrations\" />
+      <Folder Include="Item\Book\Repository\" />
+      <Folder Include="Item\Repository\" />
+      <Folder Include="Order\Configuration\" />
+      <Folder Include="Order\Repository\" />
+      <Folder Include="User\Configuration\" />
+      <Folder Include="User\Repository\" />
     </ItemGroup>
 
 </Project>

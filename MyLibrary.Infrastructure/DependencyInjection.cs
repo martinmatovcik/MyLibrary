@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyLibrary.Application.Abstraction.Database;
+using MyLibrary.Infrastructure.Database;
 
 namespace MyLibrary.Infrastructure;
 
@@ -14,8 +15,9 @@ public static class DependencyInjection
 
         services.AddDbContext<MyLibraryDbContext>(options =>
         {
-            options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
-            options.EnableSensitiveDataLogging();
+            options.UseNpgsql(connectionString, postgre => postgre.UseNodaTime())
+                .UseSnakeCaseNamingConvention()
+                .EnableSensitiveDataLogging();
         });
         
         services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<MyLibraryDbContext>());

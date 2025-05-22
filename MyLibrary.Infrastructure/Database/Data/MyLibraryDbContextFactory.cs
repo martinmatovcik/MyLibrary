@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace MyLibrary.Infrastructure.Data;
+namespace MyLibrary.Infrastructure.Database.Data;
 
 sealed internal class MyLibraryDbContextFactory(IPublisher publisher) : IDesignTimeDbContextFactory<MyLibraryDbContext>
 {

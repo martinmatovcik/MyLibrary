@@ -6,7 +6,7 @@ public class Book : Abstraction.Item
 {
     public string Author { get; private set; } = string.Empty; //string might not be the best option
     public int Year { get; private set; } = 1990;
-    public string? Isbn { get; private set; }
+    public string? Isbn { get; private set; } // TODO: ISBN custom object with format checks
     
     private Book() // default constructor for EF Core
     {
