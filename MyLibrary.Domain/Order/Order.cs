@@ -11,7 +11,7 @@ public class Order : Entity
     public Guid? ItemsOwner { get; private set; }
     public Guid Renter { get; init; } = Guid.Empty;
     public OrderStatus Status { get; private set; }
-    public LocalDateTime? PickUpDateTime { get; private set; }
+    public LocalDateTime? PickUpDateTime { get; private set; } //check offset datetime
     public LocalDate? PlannedReturnDate { get; private set; }
     public string? Note { get; private set; }
 
@@ -152,7 +152,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'confirm' order. Pick up date time must not be null.");
 
         SetOrderStatus(OrderStatus.CONFIRMED);
-        RaiseDomainEvent(new OrderConfirmed(Id));
+        RaiseDomainEvent(new OrderConfirmed(Id, Items.Select(x => x.ItemId).ToArray(), Renter, PlannedReturnDate));
 
         //TODO (In application layer): Notify renter that order was confirmed "some-how"
     }
@@ -178,7 +178,7 @@ public class Order : Entity
             throw new InvalidOperationException("Can not 'pick up' order. Order must be 'awaiting pickup'.");
 
         SetOrderStatus(OrderStatus.PICKED_UP);
-        RaiseDomainEvent(new OrderPickedUp(Id, Items.Select(x => x.ItemId).ToArray()));
+        RaiseDomainEvent(new OrderPickedUp(Id, Items.Select(x => x.ItemId).ToArray(), Renter));
     }
 
     public void Complete()

@@ -8,7 +8,7 @@ sealed internal class GetUserByIdQueryHandler(IUserRepository userRepository) : 
 {
     public async Task<LibraryUser> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.Id, cancellationToken);
+        var user = await userRepository.FirstOrDefaultByIdAsync(request.Id, cancellationToken);
 
         if (user is null) throw new InvalidOperationException($"User with id {request.Id} was not found");
         

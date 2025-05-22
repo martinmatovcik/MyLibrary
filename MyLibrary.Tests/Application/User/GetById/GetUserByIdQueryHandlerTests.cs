@@ -30,7 +30,7 @@ public class GetUserByIdQueryHandlerTests
         // Use reflection to set Id if it's a read-only property
         typeof(LibraryUser).GetProperty("Id")?.SetValue(expectedUser, userId);
         
-        _mockRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.FirstOrDefaultByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedUser);
         
         // Act
@@ -39,7 +39,7 @@ public class GetUserByIdQueryHandlerTests
         // Assert
         result.ShouldNotBeNull();
         result.ShouldBe(expectedUser);
-        _mockRepository.Verify(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.FirstOrDefaultByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -49,7 +49,7 @@ public class GetUserByIdQueryHandlerTests
         Setup();
         var userId = Guid.NewGuid();
         
-        _mockRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))!
+        _mockRepository.Setup(r => r.FirstOrDefaultByIdAsync(userId, It.IsAny<CancellationToken>()))!
             .ReturnsAsync((LibraryUser?)null);
         
         // Act & Assert
@@ -57,7 +57,7 @@ public class GetUserByIdQueryHandlerTests
             async () => await _handler.Handle(new GetUserByIdQuery(userId), CancellationToken.None));
         
         exception.Message.ShouldBe($"User with id {userId} was not found");
-        _mockRepository.Verify(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.FirstOrDefaultByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -68,7 +68,7 @@ public class GetUserByIdQueryHandlerTests
         var userId = Guid.NewGuid();
         var expectedException = new Exception("Database connection error");
         
-        _mockRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.FirstOrDefaultByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
         
         // Act & Assert
@@ -76,6 +76,6 @@ public class GetUserByIdQueryHandlerTests
             async () => await _handler.Handle(new GetUserByIdQuery(userId), CancellationToken.None));
         
         exception.ShouldBe(expectedException);
-        _mockRepository.Verify(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.FirstOrDefaultByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
