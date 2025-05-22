@@ -11,7 +11,7 @@ public class Order : Entity
     public Guid? ItemsOwner { get; private set; }
     public Guid Renter { get; init; } = Guid.Empty;
     public OrderStatus Status { get; private set; }
-    public LocalDateTime? PickUpDateTime { get; private set; }
+    public LocalDateTime? PickUpDateTime { get; private set; } //check offset datetime
     public LocalDate? PlannedReturnDate { get; private set; }
     public string? Note { get; private set; }
 
