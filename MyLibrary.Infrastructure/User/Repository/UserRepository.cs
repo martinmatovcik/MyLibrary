@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using MyLibrary.Application.User.Repository;
 using MyLibrary.Domain.User;
 using MyLibrary.Infrastructure.Abstraction.Entity.Repository;
@@ -7,5 +8,6 @@ namespace MyLibrary.Infrastructure.User.Repository;
 
 public class UserRepository(MyLibraryDbContext dbContext) : EntityRepository<LibraryUser>(dbContext), IUserRepository
 {
-    public Task<bool> IsEmailAvailableAsync(string email, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public async Task<bool> IsEmailAvailableAsync(string email, CancellationToken cancellationToken) =>
+        !await DbContext.Set<LibraryUser>().AnyAsync(x => x.Details.Email == email, cancellationToken: cancellationToken);
 }
