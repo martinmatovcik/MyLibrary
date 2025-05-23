@@ -20,7 +20,7 @@ sealed internal class RentByIdsCommandHandler(IItemRepository itemRepository, IU
         }
 
         foreach (var item in items) 
-            item.Rent(request.RenterId, request.PlannedReturnDate);
+            item.Rent(request.RenterId);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

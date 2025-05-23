@@ -1,0 +1,3 @@
+Features:
+1. Historia itemu - sledovat historiu, kto mal pozicane kedy atd
+2. Pridat planovany datum vratenia
