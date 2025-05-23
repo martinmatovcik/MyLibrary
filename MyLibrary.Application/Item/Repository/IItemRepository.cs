@@ -2,7 +2,6 @@ using MyLibrary.Domain.Abstraction.Entity.Repository;
 
 namespace MyLibrary.Application.Item.Repository;
 
-//TODO: Move to application
 public interface IItemRepository : IEntityRepository<Domain.Item.Abstraction.Item>
 {
 }
