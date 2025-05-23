@@ -8,7 +8,15 @@ public interface IEntityRepository<TEntity> where TEntity : Entity
     /// <param name="entity">The entity to add.</param>
     /// <param name="cancellationToken">A token to cancel the operation if needed.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddAsync(Entity entity, CancellationToken cancellationToken);
+    Task AddAsync(TEntity entity, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Adds multiple entities to the repository asynchronously.
+    /// </summary>
+    /// <param name="entities">The entities collection to add.</param>
+    /// <param name="cancellationToken">A token to cancel the operation if needed.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task AddAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves an entity by its unique identifier asynchronously.

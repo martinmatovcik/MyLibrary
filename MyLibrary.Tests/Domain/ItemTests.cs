@@ -8,17 +8,16 @@ public class ItemTests
 {
     private class TestItem : Item
     {
-        private TestItem(string name, string? description, Guid owner, Guid? renter, List<RentalDetail> history, ItemStatus status)
-            : base(name, description, owner, renter, history, status)
+        private TestItem(string name, string? description, Guid owner, Guid? renter, ItemStatus status)
+            : base(name, description, owner, renter, status)
         {
         }
 
-        static internal TestItem CreateWithStatus(ItemStatus itemStatus) => new("test-item", "test-description", Guid.NewGuid(), null, [], itemStatus);
+        static internal TestItem CreateWithStatus(ItemStatus itemStatus) => new("test-item", "test-description", Guid.NewGuid(), null, itemStatus);
 
         static internal TestItem CreateWithStatusAndRenter(ItemStatus itemStatus) =>
-            new("test-item", "test-description", Guid.NewGuid(), Guid.NewGuid(), [], itemStatus);
+            new("test-item", "test-description", Guid.NewGuid(), Guid.NewGuid(), itemStatus);
 
-        internal void CreateNotReturnedHistory(Guid renter, LocalDate? plannedReturnDate) => History.Add(RentalDetail.CreateActive(renter, plannedReturnDate));
     }
 
     [Fact]
@@ -34,21 +33,6 @@ public class ItemTests
         // Assert
         item.Status.ShouldBe(ItemStatus.RESERVED);
         item.Renter.ShouldBe(renter);
-    }
-
-    [Fact]
-    public void Reserve_WithNotReturnedItem_ShouldThrowException()
-    {
-        // Arrange
-        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = Guid.NewGuid();
-
-        item.Rent(renter, null);
-        typeof(Item).GetProperty("Status")!.SetValue(item, ItemStatus.AVAILABLE);
-
-        // Assert
-        Should.Throw<InvalidOperationException>(() => item.Reserve(renter))
-            .Message.ShouldBe("Item cannot be 'reserved' because it has not been returned.");
     }
 
     [Fact]
@@ -87,27 +71,13 @@ public class ItemTests
     }
 
     [Fact]
-    public void Rent_WhenItemIsNotAvailable_ShouldThrowException()
-    {
-        // Arrange
-        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = Guid.NewGuid();
-        
-        item.CreateNotReturnedHistory(renter, null);
-        
-        // Assert
-        Should.Throw<InvalidOperationException>(() => item.Rent(renter, null))
-            .Message.ShouldBe("Item cannot be 'rented' because it has not been returned.");
-    }
-
-    [Fact]
     public void Rent_WhenNotAvailable_ShouldThrowException()
     {
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.NOT_AVAILABLE);
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => item.Rent(Guid.NewGuid(), null))
+        Should.Throw<InvalidOperationException>(() => item.Rent(Guid.NewGuid()))
             .Message.ShouldBe("Item cannot be 'rented' because it is not available.");
     }
 
@@ -119,7 +89,7 @@ public class ItemTests
         var renter = Guid.NewGuid();
 
         // Act
-        item.Rent(renter, null);
+        item.Rent(renter);
 
         // Assert
         item.Status.ShouldBe(ItemStatus.NOT_AVAILABLE);
@@ -135,7 +105,7 @@ public class ItemTests
         item.Reserve(renter);
 
         // Act
-        item.Rent(renter, null);
+        item.Rent(renter);
 
         // Assert
         item.Status.ShouldBe(ItemStatus.NOT_AVAILABLE);
@@ -153,26 +123,8 @@ public class ItemTests
         item.Reserve(reserver);
 
         // Assert
-        Should.Throw<InvalidOperationException>(() => item.Rent(renter, null))
+        Should.Throw<InvalidOperationException>(() => item.Rent(renter))
             .Message.ShouldBe("Item can not be 'rented' because it is 'reserved' by different user.");
-    }
-
-    [Fact]
-    public void Rent_ShouldAddHistoryRecord()
-    {
-        // Arrange
-        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = Guid.NewGuid();
-        var returnDate = LocalDate.FromDateTime(DateTime.Now.AddDays(7));
-
-        // Act
-        item.Rent(renter, returnDate);
-
-        // Assert
-        item.History.Count.ShouldBe(1);
-        item.History[0].Status.ShouldBe(RentalDetailStatus.ACTIVE);
-        item.History[0].Renter.ShouldBe(renter);
-        item.History[0].PlannedReturnDate.ShouldBe(returnDate);
     }
 
     [Fact]
@@ -181,7 +133,7 @@ public class ItemTests
         // Arrange
         var item = TestItem.CreateWithStatusAndRenter(ItemStatus.AVAILABLE);
         var renter = Guid.NewGuid();
-        item.Rent(renter, null);
+        item.Rent(renter);
 
         // Act
         item.Return();
@@ -200,22 +152,6 @@ public class ItemTests
         Should.Throw<InvalidOperationException>(() => item.Return())
             .Message.ShouldBe("Item can not be 'returned' because it has not been 'rented'.");
     }
-
-    [Fact]
-    public void Return_ShouldUpdateHistoryRecord()
-    {
-        // Arrange
-        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = Guid.NewGuid();
-        item.Rent(renter, null);
-
-        // Act
-        item.Return();
-
-        // Assert
-        item.History.Count.ShouldBe(1);
-        item.History[0].Status.ShouldBe(RentalDetailStatus.COMPLETED);
-    }
     
     [Fact]
     public void Return_ShouldSetRenterToNull()
@@ -223,30 +159,13 @@ public class ItemTests
         // Arrange
         var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
         var renter = Guid.NewGuid();
-        item.Rent(renter, null);
+        item.Rent(renter);
         
         // Act
         item.Return();
         
         // Assert
         item.Renter.ShouldBeNull();
-    }
-    
-    [Fact]
-    public void Return_ShouldSetActualReturnDateInHistoryRecord()
-    {
-        // Arrange
-        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = Guid.NewGuid();
-        var today = LocalDateTime.FromDateTime(DateTime.Today);
-        item.Rent(renter, today.PlusDays(7).Date);
-        
-        // Act
-        item.Return();
-        
-        // Assert
-        item.History[0].RealReturnDateTime.ShouldNotBeNull();
-        item.History[0].RealReturnDateTime!.Value.ShouldBeGreaterThanOrEqualTo(today);
     }
     
     [Fact]
@@ -262,20 +181,5 @@ public class ItemTests
         
         // Assert
         item.Renter.ShouldBeNull();
-    }
-    
-    [Fact] 
-    public void Rent_WithPlannedReturnDate_ShouldSetDateCorrectly()
-    {
-        // Arrange
-        var item = TestItem.CreateWithStatus(ItemStatus.AVAILABLE);
-        var renter = Guid.NewGuid();
-        var returnDate = LocalDate.FromDateTime(DateTime.Now.AddDays(14));
-    
-        // Act
-        item.Rent(renter, returnDate);
-    
-        // Assert
-        item.History[0].PlannedReturnDate.ShouldBe(returnDate);
     }
 }

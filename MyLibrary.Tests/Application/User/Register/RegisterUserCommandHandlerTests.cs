@@ -1,8 +1,8 @@
 using Moq;
-using MyLibrary.Application.Features.User.Register;
-using MyLibrary.Domain.Abstraction;
+using MyLibrary.Application.Abstraction.Database;
+using MyLibrary.Application.User.Register;
+using MyLibrary.Application.User.Repository;
 using MyLibrary.Domain.User;
-using MyLibrary.Domain.User.Repository;
 using Shouldly;
 
 namespace MyLibrary.Tests.Application.User.Register;
