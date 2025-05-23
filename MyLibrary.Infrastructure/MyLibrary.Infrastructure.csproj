@@ -26,7 +26,6 @@
       <Folder Include="Item\Book\Repository\" />
       <Folder Include="Item\Repository\" />
       <Folder Include="Order\Repository\" />
-      <Folder Include="User\Configuration\" />
       <Folder Include="User\Repository\" />
     </ItemGroup>
 
