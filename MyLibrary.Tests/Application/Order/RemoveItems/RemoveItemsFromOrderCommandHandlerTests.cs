@@ -2,7 +2,6 @@ using Moq;
 using MyLibrary.Application.Abstraction.Database;
 using MyLibrary.Application.Order.RemoveItems;
 using MyLibrary.Application.Order.Repository;
-using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.Order;
 using Shouldly;
 

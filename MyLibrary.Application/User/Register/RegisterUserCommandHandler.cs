@@ -2,7 +2,6 @@ using MediatR;
 using MyLibrary.Application.Abstraction.Database;
 using MyLibrary.Application.FUTURE_API.User.Register;
 using MyLibrary.Application.User.Repository;
-using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.User;
 
 namespace MyLibrary.Application.User.Register;

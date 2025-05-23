@@ -1,7 +1,6 @@
 using MediatR;
 using MyLibrary.Application.Abstraction.Database;
 using MyLibrary.Application.Item.Repository;
-using MyLibrary.Domain.Abstraction;
 
 namespace MyLibrary.Application.Item.CommonFeatures.RentByIds;
 

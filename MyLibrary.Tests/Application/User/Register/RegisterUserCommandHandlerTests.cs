@@ -2,7 +2,6 @@ using Moq;
 using MyLibrary.Application.Abstraction.Database;
 using MyLibrary.Application.User.Register;
 using MyLibrary.Application.User.Repository;
-using MyLibrary.Domain.Abstraction;
 using MyLibrary.Domain.User;
 using Shouldly;
 

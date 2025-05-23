@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using MyLibrary.Domain.Abstraction.Entity;
 using MyLibrary.Domain.Helpers;
 using MyLibrary.Domain.Order;
 using MyLibrary.Domain.Order.DomainEvents;

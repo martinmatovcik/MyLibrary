@@ -2,7 +2,6 @@ using Moq;
 using MyLibrary.Application.Abstraction.Database;
 using MyLibrary.Application.Item.Book.Create;
 using MyLibrary.Application.Item.Repository;
-using MyLibrary.Domain.Abstraction;
 using Shouldly;
 
 namespace MyLibrary.Tests.Application.Item.Book;
